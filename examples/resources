@@ -1,0 +1,5 @@
+#include "partials.d/swayidle"
+
+sway.default_border.type: pixel
+sway.default_border.width: 4
+sway.mod: Mod1
