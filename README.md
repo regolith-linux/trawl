@@ -40,19 +40,36 @@ Prefix the binaries with build directory path (`target/debug` or `target/release
 
 ## Resource file / Config file format
 
-- Each line in the resource file is a key value pair separated by ':'.
+- Each line in the resource file is a key value pair separated by ':'. Eg.
   ```
   key1: value1
   key2: value2
   ```
-- A valid key is an acii alphanumeric string with no whitespace, but can include the following special characters -- **' - ', ' . ', ' \_ '**.
-- In case a line contains multiple colons (':'), the contents before the first colon are treated as key and the contents after the first colon are treated as value.
+- A valid key is an acii alphanumeric string with no whitespace, but can include the following special characters -- **' - ', ' . ', ' \_ '**. Eg.
+  ```
+  sway-wm.screen_timout: 100
+  ```
+- In case a line contains multiple colons (':'), the contents before the first colon are treated as key and the contents after the first colon are treated as value. Eg.
+  ```
+  swaywm.workspace.1.name: 1: Shell
+  ```
 - Value can be any UTF-8 string.
 - Comments are prefixed with '//' and are ignored.
 - By default, preprocessor directives (begin with '#') are processed by the c preprocessor. If the directive is not recognized, it is ignored.
 - Preprocessor directives can be used to include other files. The directive is of the form `#include <file>`. The file is relative to the resource file.
+  ```c
+  #include <config.d/swayidle>
+  ```
 - Preprocessor directives can be used to define macros. The directive is of the form `#define <macro> <value>`. The macro is a string and the value is a string. The macro is defined in the resource file.
+  ```c
+  #define USERNAME "John Doe"
+  ```
 - Just like in C, pats of the resource file can be ignored / included ccnditioinally using the `#ifdef` and `ifndef` directives.
+  ```c
+  #ifdef USERNAME
+  swaylock.greeter.user USERNAME // USERNAME is replaced with John Doe
+  #endif
+  ```
 
 ## Start the config manager (_resmand_)
 
