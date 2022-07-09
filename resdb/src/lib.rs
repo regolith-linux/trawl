@@ -99,15 +99,15 @@ impl<'a> Client<'a> {
         }
         // Either query all resources or get single resource
         if let Some(query) = &args.query {
-            let query_str = if query.len() == 0 {
+            let query_string = if query.len() == 0 {
                 ""
             } else {
                 &query[0]
             };
-            self.query(query_str).await?;
+            self.query(query_string).await?;
         }
-        else if let Some(name) = &args.get {
-            self.get_resource(name).await?;
+        else if let Some(key) = &args.get {
+            self.get_resource(&key).await?;
         }
         // Edit into file 
         if let Some(path) = &args.edit {

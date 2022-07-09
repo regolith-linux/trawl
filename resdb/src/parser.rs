@@ -1,15 +1,16 @@
-use clap::Parser;
+use clap::{Parser, AppSettings};
 
-/// CLI interface for config manager client (resdb)
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
-#[clap(author, version, about )]
+#[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp) )]
+/// Config Manager Client for resmand
 pub struct CliArgs {
 
     /// load resources from file
-    #[clap(short, long, value_parser, conflicts_with ="filename")]
+    #[clap(short, long, value_parser, conflicts_with ="filename", value_name="filename")]
     pub load: Option<String>,
 
-    #[clap(short, long, value_parser)]
+    /// merge resources from file & sort
+    #[clap(short, long, value_parser, value_name="filename")]
     pub merge: Option<String>,
 
     /// preprocessor to use [/usr/bin/cpp]
@@ -17,21 +18,26 @@ pub struct CliArgs {
     pub cpp: Option<String>,
 
     /// do not use a preprocessor
-    #[clap(short, long, action)]
+    #[clap(long, action)]
     pub nocpp: bool,
 
+    /// File to load
     #[clap(value_parser)]
     pub filename: Option<String>,
 
-    #[clap(short, long, value_parser)]
+    /// edit resources into file
+    #[clap(short, long, value_parser, value_name="filename")]
     pub edit: Option<String>,
 
-    #[clap(short, long, value_parser, requires="edit")]
+    /// backup suffix for -edit [.bak]
+    #[clap(short, long, value_parser, requires="edit", value_name="string")]
     pub backup: Option<String>,
 
-    #[clap(short, long, value_parser, conflicts_with="query")]
+    /// get the content of a resource
+    #[clap(short, long, value_parser, conflicts_with="query", value_name="name")]
     pub get: Option<String>,
 
-    #[clap(short, long, min_values=0, max_values=1)]
-    pub query: Option<Vec<String>>
+    /// query resources
+    #[clap(short, long, value_parser, min_values=0, max_values=1 ,value_name="string")]
+    pub query: Option<Vec<String>>,
 }
