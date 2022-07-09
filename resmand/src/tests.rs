@@ -5,6 +5,7 @@ pub mod unit_test {
     use uuid::Uuid;
     use std::{io::{self, Write}, fs::File};
 
+    #[allow(non_snake_case)]
     fn example_file_parsed() -> (&'static str, HashMap<String, String>) {
         const file_contents: &str = "\
 home_dir:/home
@@ -112,7 +113,7 @@ valid: \"line\"
             actual.entry(k).or_insert(v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.load_from_file(&path);
+        manager.load_from_file(&path, false);
         assert_eq!(manager.resources, actual);
         Ok(())
     }
@@ -128,7 +129,7 @@ valid: \"line\"
             actual.insert(k, v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.merge_from_file(&path);
+        manager.merge_from_file(&path, false);
         assert_eq!(manager.resources, actual);
         Ok(())
     }

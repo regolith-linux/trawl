@@ -46,7 +46,7 @@ impl ResourceManager {
                 None => return
             }
         };
-        self.load_from_file(&filename.clone());
+        self.load_from_file(&filename.clone(), self.args.nocpp);
     }
 
     /// Getter for preprocessor
@@ -55,8 +55,8 @@ impl ResourceManager {
     }
 
     /// Returns the content of the file after preprocessing
-    fn get_preprocessed_file(&mut self, file_path: &str) -> Result<String, Box<dyn Error>> {
-        if self.args.nocpp {
+    fn get_preprocessed_file(&mut self, file_path: &str, nocpp: bool) -> Result<String, Box<dyn Error>> {
+        if nocpp {
             self.logger.warn("wont use preprocessor - try running without --nocpp flag");
             let config_str = fs::read_to_string(file_path)?;
             self.logger.info("Config file read successfully");
@@ -101,8 +101,8 @@ impl ResourceManager {
     }
 
     /// Loads resources from the file. Doesn't override existing resources.
-    fn load_from_file(&mut self, file: &str) {
-        let config_str = match self.get_preprocessed_file(file) {
+    fn load_from_file(&mut self, file: &str, nocpp: bool) {
+        let config_str = match self.get_preprocessed_file(file, nocpp) {
             Ok(conf) => conf,
             Err(e) => {
                 self.logger.from_error(e);
@@ -120,8 +120,8 @@ impl ResourceManager {
 
     /// Merges resources from the file with the loaded resources. Overrides 
     /// value if key already presen in resources.
-    fn merge_from_file(&mut self, file: &str)  {
-        let config_str = match self.get_preprocessed_file(file) {
+    fn merge_from_file(&mut self, file: &str, nocpp: bool)  {
+        let config_str = match self.get_preprocessed_file(file, nocpp) {
             Ok(conf) => conf,
             Err(e) => {
                 self.logger.from_error(e);
@@ -152,9 +152,10 @@ impl ResourceManager {
         &mut self,
         #[zbus(signal_context)]
         ctxt: SignalContext<'_>,
-        path: &str
+        path: &str,
+        nocpp: bool
     ){
-        self.load_from_file(path);
+        self.load_from_file(path, nocpp);
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -163,11 +164,14 @@ impl ResourceManager {
         &mut self,
         #[zbus(signal_context)]
         ctxt: SignalContext<'_>,
-        path: &str
+        path: &str,
+        nocpp: bool
     ){
-        self.merge_from_file(path);
+        self.merge_from_file(path, nocpp);
         self.emit_resources_changed(&ctxt).await;
     }
+
+
 
     /// Returns all the matching 
     /// *Note*: Also a DBus interface

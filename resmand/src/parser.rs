@@ -1,6 +1,6 @@
-use clap::{Parser};
+use clap::Parser;
 
-/// Config manager daemon for regolith
+/// CLI interface for config manager daemon
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
 #[clap(author, version, about )]
 pub struct CliArgs {
