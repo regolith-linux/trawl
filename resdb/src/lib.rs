@@ -61,15 +61,24 @@ impl<'a> Client<'a> {
         Ok(abs)
     }
 
-    async fn load(&self, path: &str, nocpp: bool) -> Result<(), Box<dyn Error>> {
+    async fn load(&self, path: &str, nocpp: bool, cpp: &Option<String>) -> Result<(), Box<dyn Error>> {
         let abs_path = Self::get_absolute_path(path)?;
-        self.proxy.load(&abs_path, nocpp).await?;
+        if let Some(preprocessor) = &cpp {
+            self.proxy.load_cpp(&abs_path, preprocessor).await?;
+        }
+        else {
+            self.proxy.load(&abs_path, nocpp).await?;
+        }
         Ok(())
     }
 
-    async fn merge(&self, path: &str, nocpp: bool) -> Result<(), Box<dyn Error>> {
+    async fn merge(&self, path: &str, nocpp: bool, cpp: &Option<String>) -> Result<(), Box<dyn Error>> {
         let abs_path = Self::get_absolute_path(path)?;
-        self.proxy.merge(&abs_path, nocpp).await?;
+        if let Some(preprocessor) = cpp {
+            self.proxy.merge_cpp(&abs_path, preprocessor).await?;
+        } else {
+            self.proxy.merge(&abs_path, nocpp).await?;
+        }
         Ok(())
     }
 
@@ -85,29 +94,18 @@ impl<'a> Client<'a> {
         Ok(())
     }
 
-    pub async fn run(&self, args: &CliArgs) -> Result<(), Box<dyn Error>> {
-
+    pub async fn run(&self, args: &CliArgs)  -> Result<(), Box<dyn Error>> {
         // Load file (default)
         if args.load.is_some() || args.filename.is_some() {
             let file = match &args.load {
                 Some(file) => file,
                 None => args.filename.as_ref().unwrap(),
             };
-            if let Some(preprocessor) = &args.cpp {
-                self.proxy().load_cpp(file, preprocessor).await?;
-            }
-            else {
-                self.load(file, args.nocpp).await?;
-            }
+            self.load(file, args.nocpp, &args.cpp).await?;
         }
         // Merge resources
         if let Some(file) = &args.merge {
-            if let Some(preprocessor) = &args.cpp {
-                self.proxy().merge_cpp(file, preprocessor).await?;
-            }
-            else {
-                self.merge(&file, args.nocpp).await?;
-            }
+            self.merge(&file, args.nocpp, &args.cpp).await?;
         }
         // Either query all resources or get single resource
         if let Some(query) = &args.query {
@@ -144,4 +142,3 @@ impl<'a> Client<'a> {
         Ok(())
     }
 }
-
