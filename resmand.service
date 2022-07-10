@@ -1,0 +1,15 @@
+[Unit]
+Description=Regolith Config Manager Daemon
+StartLimitInterval=200
+StartLimitBurst=2
+
+[Service]
+ExecStart=/usr/bin/resmand
+Restart=on-failure
+Restart=always
+RestartSec=1
+Type=dbus
+BusName=org.regolith.ConfigMgr
+
+[Install]
+WantedBy=default.target
