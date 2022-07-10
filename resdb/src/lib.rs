@@ -21,7 +21,9 @@ impl<'a> Client<'a> {
         };
         Ok(client)
     }
-
+    pub fn proxy(&self) -> &ResourceManagerProxy {
+        &self.proxy
+    }
     /// Listen for changes in properties. Uses callback to perform required actions.
     /// # Example
     /// ```

@@ -113,7 +113,7 @@ valid: \"line\"
             actual.entry(k).or_insert(v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.load_from_file(&path, false);
+        manager.load_from_file(&path, false, "/usr/bin/cpp");
         assert_eq!(manager.resources, actual);
         Ok(())
     }
@@ -129,7 +129,7 @@ valid: \"line\"
             actual.insert(k, v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.merge_from_file(&path, false);
+        manager.merge_from_file(&path, false, "/usr/bin/cpp");
         assert_eq!(manager.resources, actual);
         Ok(())
     }
@@ -149,4 +149,20 @@ valid: \"line\"
         }
     }
 
+    #[test]
+    fn remove_all() {
+        let mut manager = get_resource_seeded_manager().unwrap();
+        manager.handle_remove_all();
+        assert_eq!(manager.resources, HashMap::<String, String>::new());
+    }
+
+    #[test]
+    fn remove_one() {
+        let mut manager = get_resource_seeded_manager().unwrap();
+        let (_, mut initial) = example_file_parsed();
+        let expected_entry = initial.remove_entry("home_dir");
+        let removed_entry = manager.handle_remove_one("home_dir");
+        assert_eq!(expected_entry, removed_entry);
+        assert_eq!(initial, manager.resources);
+    }
 }

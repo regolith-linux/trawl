@@ -9,3 +9,7 @@ edition = "2021"
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"]}
 zbus = { version = "2", default-features = false, features = ["tokio"] }
+
+[dev-dependencies]
+resmand = {path = "../resmand"}
+uuid = { version = "0.8.1", features = ["serde", "v4"] }

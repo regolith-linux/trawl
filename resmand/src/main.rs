@@ -1,6 +1,5 @@
 use std::{process, error::Error, future::pending};
 use clap::Parser;
-use zbus::ConnectionBuilder;
 use resmand::{ResourceManager, parser::CliArgs};
 
 
@@ -15,11 +14,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
     let mut manager = ResourceManager::from_args(&args);
     manager.init();
-    let _ = ConnectionBuilder::session()?
-        .name("org.regolith.ConfigMgr")?
-        .serve_at("/org/regolith/ConfigMgr", manager)?
-        .build()
-        .await?;
+    manager.run_server().await?;
     pending::<()>().await;
     Ok(())
 }

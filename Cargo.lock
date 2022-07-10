@@ -692,7 +692,9 @@ name = "resdb"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "resmand",
  "tokio",
+ "uuid",
  "zbus",
 ]
 
