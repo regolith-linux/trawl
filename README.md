@@ -9,7 +9,7 @@ Make sure you have the rust toolchain (version >= 1.62) installed. Use the follo
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
-cargo build
+make 
 ```
 
 **Note 1**: Replace `cargo build` with `cargo build --release` to build the binaries in release mode.
@@ -21,9 +21,10 @@ cargo build
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
-cargo install --path resmand/
-cargo install --path resdb/
-cargo install --path rescat/
+make
+sudo make install
+systemctl daemon-reload
+systemctl enable --now resmand
 ```
 
 # Features
