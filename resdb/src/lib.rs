@@ -93,11 +93,21 @@ impl<'a> Client<'a> {
                 Some(file) => file,
                 None => args.filename.as_ref().unwrap(),
             };
-            self.load(file, args.nocpp).await?;
+            if let Some(preprocessor) = &args.cpp {
+                self.proxy().load_cpp(file, preprocessor).await?;
+            }
+            else {
+                self.load(file, args.nocpp).await?;
+            }
         }
         // Merge resources
         if let Some(file) = &args.merge {
-            self.merge(&file, args.nocpp).await?;
+            if let Some(preprocessor) = &args.cpp {
+                self.proxy().merge_cpp(file, preprocessor).await?;
+            }
+            else {
+                self.merge(&file, args.nocpp).await?;
+            }
         }
         // Either query all resources or get single resource
         if let Some(query) = &args.query {
@@ -128,6 +138,9 @@ impl<'a> Client<'a> {
             let res_str = self.proxy.query("").await?;
             file_handle.write_all(res_str.as_bytes())?;
         } 
+        if args.remove {
+            self.proxy().remove_all().await?;
+        }
         Ok(())
     }
 }

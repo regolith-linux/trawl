@@ -40,4 +40,8 @@ pub struct CliArgs {
     /// query resources
     #[clap(short, long, value_parser, min_values=0, max_values=1 ,value_name="string")]
     pub query: Option<Vec<String>>,
+
+    ///remove resources
+    #[clap(long, action)]
+    pub remove: bool
 }

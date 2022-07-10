@@ -172,7 +172,7 @@ pub async fn arg_edit(bak: Option<String>) -> (String, String, String) {
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
-    (path.clone(), path + &bak.unwrap_or(".bak"), "hello world".to_string())
+    (path.clone(), path + &bak.unwrap_or(String::from(".bak")), "hello world".to_string())
 }
 
 pub async fn clear_resources() {
