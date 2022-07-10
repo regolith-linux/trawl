@@ -85,7 +85,8 @@ pub async fn arg_filename_default() -> HashMap<String, String> {
         edit: None,
         backup: None,
         get: None, 
-        query: None
+        query: None,
+        remove: false
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -106,7 +107,8 @@ pub async fn arg_load() -> HashMap<String, String> {
         edit: None,
         backup: None,
         get: None, 
-        query: None
+        query: None,
+        remove: false
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -126,7 +128,8 @@ pub async fn arg_merge() -> HashMap<String, String> {
         edit: None,
         backup: None,
         get: None, 
-        query: None
+        query: None,
+        remove: false
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -168,7 +171,8 @@ pub async fn arg_edit(bak: Option<String>) -> (String, String, String) {
         edit: Some(path.clone()),
         backup: bak.clone(),
         get: None, 
-        query: None
+        query: None,
+        remove: false
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();

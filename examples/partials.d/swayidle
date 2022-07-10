@@ -3,6 +3,7 @@ swayidle.lock.cmd:swaylock -f
 swayidle.screen_off.timeout: 130
 swayidle.screen_off.cmd: 'swaymsg "output * dpms off"'
 swayidle.screen_off.resume: 'swaymsg "output * dpms on"'
+*timeout*:100
 swayidle.sleep.timeout: 300
 swayidle.sleep.cmd: 'systemctl suspend'
 swayidle.before_sleep: 'swaylock -f --grace 0'

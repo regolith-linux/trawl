@@ -115,9 +115,9 @@ The CLI client allows the user to interact with the config manager. Primary func
    resdb --get key1
    ```
 
-## TODO: xrerscat replacement (rescat)
+## Get resource value (rescat)
 
-`rescat` is a drop-in replacement for `xrerscat`. It is currently a WIP.
+`rescat` is a drop-in replacement for `xrerscat` and prints the vlaue of the requested resouorce. For more info, see the ([xrerscat](https://github.com/regolith-linux/xrescat)) documentation.
 
 ## Client API (for C)
 
