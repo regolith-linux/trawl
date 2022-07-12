@@ -9,6 +9,8 @@ Make sure you have the rust toolchain (version >= 1.62) installed. Use the follo
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
+# make setup command might fail. This won't effect the build.
+make setup
 make
 ```
 
@@ -16,16 +18,23 @@ make
 
 **Note 2**: The binaries are located in the `target/debug` directory (`target/release` if built in release mode).
 
+**Note 3**: The `make setup` command will fail the first time you run it. This is because the code for dbus-interface is generated at this step. You can ignore this error and proceed to the following commands.
+
 # Install Instructions
 
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
+# make setup command might fail. This won't effect the build.
+make setup
+make setup
 make
 sudo make install
 systemctl daemon-reload
 systemctl enable --now resmand
 ```
+**Note**: The `make setup` command will fail the first time you run it. This is because the code for dbus-interface is generated at this step. You can ignore this error and proceed to the following commands.
+
 
 # Features
 
