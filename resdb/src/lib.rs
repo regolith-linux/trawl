@@ -84,7 +84,8 @@ impl<'a> Client<'a> {
 
     async fn query(&self, q: &str) -> zbus::Result<()> {
         let result = self.proxy.query(q).await?;
-        println!("{result}");
+        print!("{result}");
+        std::io::stdout().flush()?;
         Ok(())
     }
 
