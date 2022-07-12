@@ -13,8 +13,6 @@ BIN_D := resmand
 BIN_C := rescat
 BIN_DB := resdb
 
-SRC := Cargo.toml Cargo.lock Makefile $(shell find -type f -wholename '**/src/*.rs')
-
 all: build
 
 clean:
@@ -25,6 +23,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
 	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
+	meson install -C client_api/build
 
 uninstall:
 	rm -f "$(bindir)/$(BIN_C)"
@@ -34,7 +33,8 @@ uninstall:
 
 build:
 	cargo build --release
-
+	meson client_api/build
+	meson compile -C client_api/build
 test:
 	cargo test
 

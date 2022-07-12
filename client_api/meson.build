@@ -2,10 +2,10 @@ project('demo', 'c',
   version : '0.1',
   default_options : ['warning_level=3'])
 
+pkg = import('pkgconfig')
+
 gio_dep = dependency('gio-unix-2.0')
-
 lib_deps = [gio_dep]
-
 sources = ['client_api.c']
 
 sources += custom_target('dbus_codegen_files', 
@@ -13,9 +13,24 @@ sources += custom_target('dbus_codegen_files',
   output: ['config_manager.c', 'config_manager.h'],
   command: ['scripts/run_codegen.sh', '@INPUT@', '@OUTPUT@'])
 
+lib_so_version = '0'
+pkg_config_name = 'resdb-0'
 
 libclient_api = library ('regolith-config-client',
         sources,
-        dependencies: lib_deps)
+        dependencies: lib_deps,
+        version: meson.project_version(),
+        soversion: lib_so_version,
+        install: true)
+
+install_headers(['client_api.h', 'build/config_manager.h', ], subdir: 'resdb')
+
+pkg.generate(libclient_api, 
+        name: 'resdb',
+        version: meson.project_version(),
+        libraries: [libclient_api],
+        filebase: pkg_config_name,
+        install_dir: '/usr/lib/pkgconfig',
+        description: 'Use regolith config manager')
 
 subdir('example')
