@@ -31,10 +31,17 @@ uninstall:
 	rm -f "$(bindir)/$(BIN_DB)"
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
+setup:
+	mkdir -p client_api/build
+	touch client_api/build/config_manager.h
+	cd client_api && meson setup build
+	meson compile -C client_api/build/
+
 build:
 	cargo build --release
-	meson client_api/build
-	meson compile -C client_api/build
+	echo "Ensure you have the latest build of resmand running"
+	./postbuild.sh
+	meson compile -C client_api/build/
 test:
 	cargo test
 
@@ -44,4 +51,4 @@ code-coverage:
 	cargo tarpaulin -b -- --test-threads 1 
 	killall resmand
 
-.PHONY: all clean install uninstall build test code-coverage
+.PHONY: all clean install uninstall setup build test code-coverage
