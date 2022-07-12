@@ -1,4 +1,3 @@
-#include "config_manager.h"
 #include <client_api.h>
 #include <stdbool.h>
 #include <stdlib.h>

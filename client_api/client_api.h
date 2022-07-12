@@ -1,7 +1,7 @@
 #ifndef REGOLITH_CONFIG_MANAGER_CLIENT_API_HEADER
 #define REGOLITH_CONFIG_MANAGER_CLIENT_API_HEADER
-#include <config_manager.h>
 #include <stdbool.h>
+#include "config_manager.h"
 
 typedef OrgRegolithConfig1 *conf_client;
 
