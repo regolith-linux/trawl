@@ -1,8 +1,10 @@
 pub mod parser;
 pub mod log;
 pub mod tests;
+mod common;
 
 use std::{process::Command, collections::HashMap, error::Error, fs};
+use common::trim_str;
 use parser::CliArgs;
 use log::Logger;
 use zbus::{dbus_interface, SignalContext, ConnectionBuilder};
@@ -88,15 +90,21 @@ impl ResourceManager {
 
     /// Checks if a given key is a valid resource name
     fn check_valid_key(&self, key: &str) -> bool {
+        let mut is_valid = true;
         let allowed_chars = ['-', '.', '_'];
+        if key.len() == 0 {
+            is_valid = false;
+        }
         for ch in key.chars() {
             if !ch.is_ascii_alphanumeric() && !allowed_chars.contains(&ch) {
                 self.logger.warn(&format!("{key} is not a valid key"));
-                return false;
+                is_valid = false;
+                break;
             }
         }
-        true
+        is_valid
     }
+
 
     /// Parse the 'config_str' string into key value pairs
     fn parse_config(&self, config_str: &str) -> HashMap<String, String> {
@@ -219,24 +227,27 @@ impl ResourceManager {
     /// Returns all the matching 
     /// *Note*: Also a DBus interface
     pub fn query(&self, q: &str) -> String {
+        let query_trimmed = trim_str(q);
         let mut matches:Vec<_> = self.resources.iter()
-            .filter(|(k, _)| k.contains(q))
+            .filter(|(k, _)| k.contains(query_trimmed))
             .map(|(x, v)| format!("{} :\t{}", x, v))
             .collect();
         matches.sort();
         let query_result = matches.join("\n");
-        self.logger.info(&format!("Following queries match the query {q}
-                                  :\n{query_result}"));
-
+        self.logger.info(&format!("Following resources match the query '{query_trimmed}'\
+                                  : {query_result}"));
         query_result
     }
 
     /// Get the resource value
     pub fn get_resource(&self, key: &str) -> String {
-        self.resources
-            .get(key)
+        let key_trimmed = trim_str(key);
+        let value = self.resources
+            .get(key_trimmed)
             .unwrap_or(&String::from(""))
-            .to_owned()
+            .to_owned();
+        self.logger.info(&format!("value of key {key_trimmed} is {value}"));
+        value
     }
 
     /// DBus interface to set the value of a resource. Overwrites exiting value.
@@ -251,7 +262,9 @@ impl ResourceManager {
         key: String, 
         val: String
     ) {
-        let curr_val = self.resources.get(&key);
+        let key_trimmed = common::trim_str(&key);
+        let val_trimmed = common::trim_str(&val);
+        let curr_val = self.resources.get(key_trimmed);
         // Do not add key-value pair if key exists and current value is
         // same as the value to be inserted
         if let Some(x) = curr_val {
@@ -259,7 +272,7 @@ impl ResourceManager {
                 return
             }
         }
-        self.resources.insert(key, val);
+        self.resources.insert(String::from(key_trimmed), String::from(val_trimmed));
         self.emit_resources_changed(&ctxt).await;
 
     }
@@ -274,12 +287,14 @@ impl ResourceManager {
         key: String, 
         val: String,
     ) {
-        let curr_val = self.resources.get(&key);
+        let key_trimmed = trim_str(&key);
+        let val_trimmed = trim_str(&val);
+        let curr_val = self.resources.get(key_trimmed);
         // Do not add key value pair if key already defined
         if let Some(_) = curr_val {
             return;
         }
-        self.resources.insert(key, val);
+        self.resources.insert(String::from(key_trimmed), String::from(val_trimmed));
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -304,7 +319,8 @@ impl ResourceManager {
         ctxt: SignalContext<'_>,
         key: &str
     ) {
-        let removed_entry = self.handle_remove_one(key);
+        let key_trimmed = trim_str(key);
+        let removed_entry = self.handle_remove_one(key_trimmed);
         if let Some(pair) = removed_entry {
             self.emit_resources_changed(&ctxt).await;
             self.logger.warn(&format!("Resource cleared {:?}", pair));

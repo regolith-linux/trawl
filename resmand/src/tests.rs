@@ -7,7 +7,7 @@ pub mod unit_test {
 
     #[allow(non_snake_case)]
     fn example_file_parsed() -> (&'static str, HashMap<String, String>) {
-        const file_contents: &str = "\
+        const CONTENTS: &str = "\
 home_dir:/home
     key_one:val_one\t
 invalid-line's#!\\
@@ -17,6 +17,7 @@ valid: \"line\"
 \"hello\' : invalid
  /home: invalid
  string\\: invalid
+    :   
         ";
         let expected_map:HashMap<_,_> = [
             ("home_dir", "/home"), 
@@ -27,7 +28,7 @@ valid: \"line\"
         ].iter()
             .map(|&(k,v)| (k.to_string(),v.to_string()))
             .collect();
-        (file_contents, expected_map)
+        (CONTENTS, expected_map)
     }
 
     fn seed_args() -> CliArgs {
