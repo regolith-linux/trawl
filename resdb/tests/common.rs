@@ -143,15 +143,6 @@ pub async fn arg_query() -> (String, String) {
     (q, expected.to_string())
 }
 
-pub fn resources_to_str(resources: HashMap<String, String>) -> String {
-        let mut matches:Vec<_> = resources.iter()
-            .map(|(x, v)| format!("{} :\t{}", x, v))
-            .collect();
-        matches.sort();
-        let query_result = matches.join("\n");
-        query_result
-}
-
 pub async fn query_all_result() -> String {
     let _ = arg_filename_default().await;
     let client = Client::new().await.unwrap();
