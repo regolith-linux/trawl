@@ -183,7 +183,7 @@ impl ResourceManager {
     }
 }
 
-#[dbus_interface(name = "org.regolith.config1")]
+#[dbus_interface(name = "org.regolith.trawl1")]
 impl ResourceManager {
     /// DBus Interface to load resources from file
     async fn load(

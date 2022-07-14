@@ -29,7 +29,7 @@ cd regolith-config-manager
 make setup
 make setup
 make
-sudo make install
+make install
 systemctl daemon-reload
 systemctl enable --now trawld
 ```

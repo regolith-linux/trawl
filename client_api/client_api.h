@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "config_manager.h"
 
-typedef OrgRegolithConfig1 *conf_client;
+typedef OrgRegolithTrawl1 *conf_client;
 
 conf_client *proxy_new();
 bool conf_client_init(conf_client *proxy, GError **err);
