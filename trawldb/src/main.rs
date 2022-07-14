@@ -1,6 +1,6 @@
 use clap::Parser;
 use std::error::Error;
-use resdb::{parser::CliArgs, Client};
+use trawldb::{parser::CliArgs, Client};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -8,7 +8,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::new().await?;
     let res = client.run(&args).await;
     if let Err(e) = res {
-        eprintln!("resdb: {e}");
+        eprintln!("trawldb: {e}");
     }
     Ok(())
 }

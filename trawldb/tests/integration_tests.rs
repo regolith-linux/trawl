@@ -1,11 +1,11 @@
-//! **Note** 1: Run the config daemon `resmand` before running the tests
+//! **Note** 1: Run the config daemon `trawld` before running the tests
 //! **Note** 2: Run the tests sequentially. 
 
 mod common;
 
 use std::{fs, collections::HashMap};
 
-use resdb::Client;
+use trawldb::Client;
 use common::*;
 
 #[tokio::test]

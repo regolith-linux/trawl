@@ -1,6 +1,6 @@
 use std::{error::Error, process};
 use clap::{Parser, AppSettings};
-use resdb::Client;
+use trawldb::Client;
 
 #[derive(Parser)]
 #[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp))]

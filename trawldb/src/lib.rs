@@ -29,7 +29,7 @@ impl<'a> Client<'a> {
     /// ```
     /// use zbus::zvariant::Value;
     /// async {
-    ///     let client = resdb::Client::new().await.unwrap();
+    ///     let client = trawldb::Client::new().await.unwrap();
     ///     let mut callback = |s:String, v: Value| println!("{s} {:#?}", v);
     ///     client.listen_props_change(callback);
     /// };
@@ -39,7 +39,7 @@ impl<'a> Client<'a> {
         T: FnMut(String, Value) -> ()
     {
         let props = PropertiesProxy::builder(&self.connection)
-            .destination("org.regolith.ConfigMgr")?
+            .destination("org.regolith.Trawl")?
             .path(self.proxy.path())?
             .build()
             .await?;

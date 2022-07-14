@@ -14,7 +14,7 @@ sources += custom_target('dbus_codegen_files',
   command: ['scripts/run_codegen.sh', '@INPUT@', '@OUTPUT@'])
 
 lib_so_version = '0'
-pkg_config_name = 'resdb-0'
+pkg_config_name = 'trawldb-0'
 
 libclient_api = library ('regolith-config-client',
         sources,
@@ -23,10 +23,10 @@ libclient_api = library ('regolith-config-client',
         soversion: lib_so_version,
         install: true)
 
-install_headers(['client_api.h', 'build/config_manager.h', ], subdir: 'resdb')
+install_headers(['client_api.h', 'build/config_manager.h', ], subdir: 'trawldb')
 
 pkg.generate(libclient_api, 
-        name: 'resdb',
+        name: 'trawldb',
         version: meson.project_version(),
         libraries: [libclient_api],
         filebase: pkg_config_name,

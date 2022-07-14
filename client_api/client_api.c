@@ -8,8 +8,8 @@ bool conf_client_init(conf_client *proxy, GError **err) {
     *proxy = 
         org_regolith_config1_proxy_new_for_bus_sync( G_BUS_TYPE_SESSION, 
                 G_DBUS_PROXY_FLAGS_NONE,
-                "org.regolith.ConfigMgr", 
-                "/org/regolith/ConfigMgr",
+                "org.regolith.Trawl", 
+                "/org/regolith/Trawl",
                 NULL,
                 err);
     if(*err) {

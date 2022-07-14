@@ -1,6 +1,11 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
  "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node>
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg type="s" direction="out"/>
+    </method>
+  </interface>
   <interface name="org.freedesktop.DBus.Peer">
     <method name="Ping">
     </method>
@@ -38,7 +43,7 @@
       <arg name="cpp" type="s" direction="in"/>
     </method>
     <!--
-     Returns all the matching 
+     Returns all the matching
      *Note*: Also a DBus interface
      -->
     <method name="Query">
@@ -56,15 +61,15 @@
      DBus interface to set the value of a resource. Overwrites exiting value.
      TODO: Separate implementation to make more testable
      # Emits
-     **resources_changed**: This signal indicated the change 
-     in'resources' property value 
+     **resources_changed**: This signal indicated the change
+     in'resources' property value
      -->
     <method name="SetResource">
       <arg name="key" type="s" direction="in"/>
       <arg name="val" type="s" direction="in"/>
     </method>
     <!--
-     DBus interface to add a new resource. Doesn't overwrite exiting 
+     DBus interface to add a new resource. Doesn't overwrite exiting
      values in case of conflicts
      TODO: Separate implementation to make more testable
      -->
@@ -87,11 +92,6 @@
      DBus interface for getting resources values
      -->
     <property name="Resources" type="a{ss}" access="read"/>
-  </interface>
-  <interface name="org.freedesktop.DBus.Introspectable">
-    <method name="Introspect">
-      <arg type="s" direction="out"/>
-    </method>
   </interface>
   <interface name="org.freedesktop.DBus.Properties">
     <method name="Get">

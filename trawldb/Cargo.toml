@@ -1,5 +1,5 @@
 [package]
-name = "resdb"
+name = "trawldb"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,5 +11,5 @@ tokio = { version = "1", features = ["full"]}
 zbus = { version = "2", default-features = false, features = ["tokio"] }
 
 [dev-dependencies]
-resmand = {path = "../resmand"}
+trawld = {path = "../trawld"}
 uuid = { version = "0.8.1", features = ["serde", "v4"] }

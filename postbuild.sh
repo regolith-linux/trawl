@@ -1,5 +1,5 @@
 #!/bin/sh
-# Use run this script after building resmand to generate updated 
+# Use run this script after building trawld to generate updated 
 # Introspection xml for the dbus service
 
 dbus-send --session \

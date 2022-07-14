@@ -684,37 +684,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rescat"
-version = "0.1.0"
-dependencies = [
- "clap",
- "resdb",
- "tokio",
-]
-
-[[package]]
-name = "resdb"
-version = "0.1.0"
-dependencies = [
- "clap",
- "resmand",
- "tokio",
- "uuid",
- "zbus",
-]
-
-[[package]]
-name = "resmand"
-version = "0.1.0"
-dependencies = [
- "clap",
- "colored",
- "tokio",
- "uuid",
- "zbus",
-]
-
-[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -939,6 +908,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b7358be39f2f274f322d2aaed611acc57f382e8eb1e5b48cb9ae30933495ce7"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "trawlcat"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "tokio",
+ "trawldb",
+]
+
+[[package]]
+name = "trawld"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "colored",
+ "tokio",
+ "uuid",
+ "zbus",
+]
+
+[[package]]
+name = "trawldb"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "tokio",
+ "trawld",
+ "uuid",
+ "zbus",
 ]
 
 [[package]]

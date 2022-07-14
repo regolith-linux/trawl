@@ -1,15 +1,15 @@
 [Unit]
-Description=Regolith Config Manager Daemon
+Description=Trawl Configuration Daemon
 StartLimitInterval=200
 StartLimitBurst=2
 
 [Service]
-ExecStart=/usr/bin/resmand
+ExecStart=/usr/bin/trawld
 Restart=on-failure
 Restart=always
 RestartSec=1
 Type=dbus
-BusName=org.regolith.ConfigMgr
+BusName=org.regolith.Trawl
 
 [Install]
 WantedBy=default.target

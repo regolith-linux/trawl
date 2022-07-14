@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use zbus::{Result, dbus_proxy};
 
 #[dbus_proxy(
-    default_service = "org.regolith.ConfigMgr",
-    default_path = "/org/regolith/ConfigMgr",
-    interface = "org.regolith.config1"
+    default_service = "org.regolith.Trawl",
+    default_path = "/org/regolith/Trawl",
+    interface = "org.regolith.trawl1"
 )]
 #[dbus_proxy]
 pub trait ResourceManager {

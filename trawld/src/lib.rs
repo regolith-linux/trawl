@@ -1,24 +1,22 @@
-pub mod parser;
-pub mod log;
-pub mod tests;
 mod common;
+pub mod log;
+pub mod parser;
+pub mod tests;
 
-use std::{process::Command, collections::HashMap, error::Error, fs};
 use common::trim_str;
-use parser::CliArgs;
 use log::Logger;
-use zbus::{dbus_interface, SignalContext, ConnectionBuilder};
-
+use parser::CliArgs;
+use std::{collections::HashMap, error::Error, fs, process::Command};
+use zbus::{dbus_interface, ConnectionBuilder, SignalContext};
 
 /// Stores and manages the resources
-#[derive( Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct ResourceManager {
     resources: HashMap<String, String>,
     preprocessor: String,
     logger: Logger,
     args: CliArgs,
 }
-
 
 impl ResourceManager {
     /// Create new ResourceManager object from CliArgs
@@ -45,42 +43,47 @@ impl ResourceManager {
             Some(file) => file,
             None => match &self.args.filename {
                 Some(x) => x,
-                None => return
-            }
+                None => return,
+            },
         };
-        self.load_from_file(&filename.clone(), self.args.nocpp, &self.preprocessor.clone());
+        self.load_from_file(
+            &filename.clone(),
+            self.args.nocpp,
+            &self.preprocessor.clone(),
+        );
     }
 
     /// Runs the config daemon
     pub async fn run_server(self) -> zbus::Result<()> {
         ConnectionBuilder::session()?
-            .name("org.regolith.ConfigMgr")?
-            .serve_at("/org/regolith/ConfigMgr", self)?
+            .name("org.regolith.Trawl")?
+            .serve_at("/org/regolith/Trawl", self)?
             .build()
             .await?;
         Ok(())
-
     }
 
     /// Getter for preprocessor
-    fn preprocessor(&self, cmd: &str) -> Command{
+    fn preprocessor(&self, cmd: &str) -> Command {
         Command::new(cmd)
     }
 
     /// Returns the content of the file after preprocessing
-    fn get_preprocessed_file(&mut self, file_path: &str, nocpp: bool, cpp: &str) -> Result<String, Box<dyn Error>> {
+    fn get_preprocessed_file(
+        &mut self,
+        file_path: &str,
+        nocpp: bool,
+        cpp: &str,
+    ) -> Result<String, Box<dyn Error>> {
         if nocpp {
-            self.logger.warn("wont use preprocessor - try running without --nocpp flag");
+            self.logger
+                .warn("wont use preprocessor - try running without --nocpp flag");
             let config_str = fs::read_to_string(file_path)?;
             self.logger.info("Config file read successfully");
             self.logger.info(&config_str);
             return Ok(config_str);
         }
-        let output_bytes = self.preprocessor(cpp)
-            .arg(file_path)
-            .output()?
-            .stdout;
-
+        let output_bytes = self.preprocessor(cpp).arg(file_path).output()?.stdout;
 
         let conf_utf8 = String::from_utf8(output_bytes)?;
         self.logger.info("File preprocessed successfully...");
@@ -105,14 +108,14 @@ impl ResourceManager {
         is_valid
     }
 
-
     /// Parse the 'config_str' string into key value pairs
     fn parse_config(&self, config_str: &str) -> HashMap<String, String> {
-        let parsed_resources: HashMap<String, String>= config_str.lines()
+        let parsed_resources: HashMap<String, String> = config_str
+            .lines()
             // Split at ':'
-            .filter_map(|s| s.split_once(':')) 
+            .filter_map(|s| s.split_once(':'))
             // trim and conver to String
-            .map(|(k, v)| (k.trim().to_string(), v.trim().to_string())) 
+            .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
             // Skip line if key contains invalid characters
             .filter(|(k, _)| self.check_valid_key(&k))
             .collect();
@@ -127,37 +130,43 @@ impl ResourceManager {
                 self.logger.from_error(e);
                 return;
             }
-        }; 
+        };
         let parsed_resources = self.parse_config(&config_str);
-        self.logger.info(&format!("parsed_resources: {:#?}", parsed_resources));
+        self.logger
+            .info(&format!("parsed_resources: {:#?}", parsed_resources));
         for (k, v) in parsed_resources {
             self.resources.entry(k).or_insert(v);
         }
-        self.logger.info(&format!("Updated resources after loading: \n {:#?}", &self.resources))
+        self.logger.info(&format!(
+            "Updated resources after loading: \n {:#?}",
+            &self.resources
+        ))
     }
 
-
-    /// Merges resources from the file with the loaded resources. Overrides 
+    /// Merges resources from the file with the loaded resources. Overrides
     /// value if key already presen in resources.
-    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str)  {
+    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str) {
         let config_str = match self.get_preprocessed_file(file, nocpp, cpp) {
             Ok(conf) => conf,
             Err(e) => {
                 self.logger.from_error(e);
                 return;
             }
-        }; 
+        };
         let parsed_resources = self.parse_config(&config_str);
-        self.logger.info(&format!("parsed_resources: {:#?}", parsed_resources));
+        self.logger
+            .info(&format!("parsed_resources: {:#?}", parsed_resources));
         for (k, v) in parsed_resources {
             self.resources.insert(k, v);
         }
-        self.logger.info(&format!("Updated resources after merging: \n {:#?}", &self.resources))
+        self.logger.info(&format!(
+            "Updated resources after merging: \n {:#?}",
+            &self.resources
+        ))
     }
 
-
     /// Notify clients when resource changed
-    pub async fn emit_resources_changed (&self, ctxt: &SignalContext<'_>) {
+    pub async fn emit_resources_changed(&self, ctxt: &SignalContext<'_>) {
         if let Err(e) = self.resources_changed(&ctxt).await {
             self.logger.error(&format!("{e}"));
         }
@@ -179,11 +188,10 @@ impl ResourceManager {
     /// DBus Interface to load resources from file
     async fn load(
         &mut self,
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
-        nocpp: bool
-    ){
+        nocpp: bool,
+    ) {
         self.load_from_file(path, nocpp, &self.preprocessor.clone());
         self.emit_resources_changed(&ctxt).await;
     }
@@ -191,11 +199,10 @@ impl ResourceManager {
     /// DBus Interface to merge resources from file
     async fn merge(
         &mut self,
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
-        nocpp: bool
-    ){
+        nocpp: bool,
+    ) {
         self.merge_from_file(path, nocpp, &self.preprocessor.clone());
         self.emit_resources_changed(&ctxt).await;
     }
@@ -203,11 +210,10 @@ impl ResourceManager {
     /// DBus Interface to load resources from file using custom preprocessor
     async fn load_cpp(
         &mut self,
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
-        cpp: &str
-    ){
+        cpp: &str,
+    ) {
         self.load_from_file(path, false, cpp);
         self.emit_resources_changed(&ctxt).await;
     }
@@ -215,52 +221,56 @@ impl ResourceManager {
     /// DBus Interface to merge resources from file using custom preprocessor
     async fn merge_cpp(
         &mut self,
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
-        cpp: &str
-    ){
+        cpp: &str,
+    ) {
         self.merge_from_file(path, false, cpp);
         self.emit_resources_changed(&ctxt).await;
     }
 
-    /// Returns all the matching 
+    /// Returns all the matching
     /// *Note*: Also a DBus interface
     pub fn query(&self, q: &str) -> String {
         let query_trimmed = trim_str(q);
-        let mut matches:Vec<_> = self.resources.iter()
+        let mut matches: Vec<_> = self
+            .resources
+            .iter()
             .filter(|(k, _)| k.contains(query_trimmed))
             .map(|(x, v)| format!("{} :\t{}", x, v))
             .collect();
         matches.sort();
         let query_result = matches.join("\n");
-        self.logger.info(&format!("Following resources match the query '{query_trimmed}'\
-                                  : {query_result}"));
+        self.logger.info(&format!(
+            "Following resources match the query '{query_trimmed}'\
+                                  : {query_result}"
+        ));
         query_result
     }
 
     /// Get the resource value
     pub fn get_resource(&self, key: &str) -> String {
         let key_trimmed = trim_str(key);
-        let value = self.resources
+        let value = self
+            .resources
             .get(key_trimmed)
             .unwrap_or(&String::from(""))
             .to_owned();
-        self.logger.info(&format!("value of key {key_trimmed} is {value}"));
+        self.logger
+            .info(&format!("value of key {key_trimmed} is {value}"));
         value
     }
 
     /// DBus interface to set the value of a resource. Overwrites exiting value.
     /// TODO: Separate implementation to make more testable
     /// # Emits
-    /// **resources_changed**: This signal indicated the change 
-    /// in'resources' property value 
+    /// **resources_changed**: This signal indicated the change
+    /// in'resources' property value
     pub async fn set_resource(
-        &mut self, 
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
-        key: String, 
-        val: String
+        &mut self,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
+        key: String,
+        val: String,
     ) {
         let key_trimmed = common::trim_str(&key);
         let val_trimmed = common::trim_str(&val);
@@ -269,22 +279,21 @@ impl ResourceManager {
         // same as the value to be inserted
         if let Some(x) = curr_val {
             if *x == val {
-                return
+                return;
             }
         }
-        self.resources.insert(String::from(key_trimmed), String::from(val_trimmed));
+        self.resources
+            .insert(String::from(key_trimmed), String::from(val_trimmed));
         self.emit_resources_changed(&ctxt).await;
-
     }
 
-    /// DBus interface to add a new resource. Doesn't overwrite exiting 
+    /// DBus interface to add a new resource. Doesn't overwrite exiting
     /// values in case of conflicts
     /// TODO: Separate implementation to make more testable
     pub async fn add_resource(
-        &mut self, 
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
-        key: String, 
+        &mut self,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
+        key: String,
         val: String,
     ) {
         let key_trimmed = trim_str(&key);
@@ -294,16 +303,13 @@ impl ResourceManager {
         if let Some(_) = curr_val {
             return;
         }
-        self.resources.insert(String::from(key_trimmed), String::from(val_trimmed));
+        self.resources
+            .insert(String::from(key_trimmed), String::from(val_trimmed));
         self.emit_resources_changed(&ctxt).await;
     }
 
     /// Dbus interface to remove all entries from config manager
-    pub async fn remove_all(
-        &mut self, 
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
-    ) {
+    pub async fn remove_all(&mut self, #[zbus(signal_context)] ctxt: SignalContext<'_>) {
         let num_of_resources = self.resources.len();
         self.resources.clear();
         if num_of_resources > 0 {
@@ -313,12 +319,7 @@ impl ResourceManager {
     }
 
     /// Dbus interface to remove single entry from config manager
-    pub async fn remove_one(
-        &mut self, 
-        #[zbus(signal_context)]
-        ctxt: SignalContext<'_>,
-        key: &str
-    ) {
+    pub async fn remove_one(&mut self, #[zbus(signal_context)] ctxt: SignalContext<'_>, key: &str) {
         let key_trimmed = trim_str(key);
         let removed_entry = self.handle_remove_one(key_trimmed);
         if let Some(pair) = removed_entry {

@@ -2,7 +2,7 @@ use clap::{Parser, AppSettings};
 
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
 #[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp) )]
-/// Config Manager Client for resmand
+/// Config Manager Client for trawld
 pub struct CliArgs {
 
     /// load resources from file

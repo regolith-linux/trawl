@@ -1,4 +1,4 @@
-use resdb::{Client, parser::CliArgs};
+use trawldb::{Client, parser::CliArgs};
 use std::collections::HashMap;
 use std::{ fs::File, io};
 use io::Write;

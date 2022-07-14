@@ -9,9 +9,9 @@ datarootdir = $(prefix)/share
 libdir = $(exec_prefix)/lib
 zshcpl = $(datarootdir)/zsh/site-functions
 
-BIN_D := resmand
-BIN_C := rescat
-BIN_DB := resdb
+BIN_D := trawld
+BIN_C := trawlcat
+BIN_DB := trawldb
 
 all: build
 
@@ -19,10 +19,10 @@ clean:
 	cargo clean
 
 install: 
-	$(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
-	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
-	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
-	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
+	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
+	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
+	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
+	sudo $(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
 	meson install -C client_api/build
 
 uninstall:
@@ -39,16 +39,16 @@ setup:
 
 build:
 	cargo build --release
-	echo "Ensure you have the latest build of resmand running"
+	echo "Ensure you have the latest build of $(BIN_D) running"
 	./postbuild.sh
 	meson compile -C client_api/build/
 test:
 	cargo test
 
 code-coverage:
-	cargo build --bin resmand
-	cargo targe/debug/resmand &
+	cargo build --bin $(BIN_D)
+	cargo targe/debug/$(BIN_D) &
 	cargo tarpaulin -b -- --test-threads 1 
-	killall resmand
+	killall $(BIN_D)
 
 .PHONY: all clean install uninstall setup build test code-coverage

@@ -1,6 +1,6 @@
 use std::{process, error::Error, future::pending};
 use clap::Parser;
-use resmand::{ResourceManager, parser::CliArgs};
+use trawld::{ResourceManager, parser::CliArgs};
 
 
 #[tokio::main]
