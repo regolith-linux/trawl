@@ -23,7 +23,7 @@ setup: build-rust
 clean:
 	cargo clean
 
-install: 
+install: setup build
 	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
 	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"

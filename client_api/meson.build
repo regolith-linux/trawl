@@ -16,7 +16,7 @@ sources += custom_target('dbus_codegen_files',
 lib_so_version = '0'
 pkg_config_name = 'trawldb-0'
 
-libclient_api = library ('regolith-config-client',
+libclient_api = library ('trawl-client',
         sources,
         dependencies: lib_deps,
         version: meson.project_version(),
@@ -32,5 +32,7 @@ pkg.generate(libclient_api,
         filebase: pkg_config_name,
         install_dir: '/usr/lib/pkgconfig',
         description: 'Use regolith config manager')
+
+run_target('uninstall-lib', command : ['scripts/uninstall.sh'])
 
 subdir('example')

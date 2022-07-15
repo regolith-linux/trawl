@@ -9,8 +9,6 @@ Make sure you have the rust toolchain (version >= 1.62) installed. Use the follo
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
-# make setup command might fail. This won't effect the build.
-make setup
 make
 ```
 
@@ -25,10 +23,6 @@ make
 ```bash
 git clone https://github.com/regolith-linux/regolith-config-manager.git
 cd regolith-config-manager
-# make setup command might fail. This won't effect the build.
-make setup
-make setup
-make
 make install
 systemctl daemon-reload
 systemctl enable --now trawld
