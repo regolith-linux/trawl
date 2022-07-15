@@ -13,7 +13,12 @@ BIN_D := trawld
 BIN_C := trawlcat
 BIN_DB := trawldb
 
-all: build
+all: setup build
+
+build: build-rust build-lib
+
+setup: build-rust
+	-make setup-lib
 
 clean:
 	cargo clean
@@ -31,17 +36,12 @@ uninstall:
 	rm -f "$(bindir)/$(BIN_DB)"
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
-setup:
+setup-lib: 
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
 	cd client_api && meson setup build
 	meson compile -C client_api/build/
 
-build:
-	cargo build --release
-	echo "Ensure you have the latest build of $(BIN_D) running"
-	./postbuild.sh
-	meson compile -C client_api/build/
 test:
 	cargo test
 
@@ -51,4 +51,14 @@ code-coverage:
 	cargo tarpaulin -b -- --test-threads 1 
 	killall $(BIN_D)
 
-.PHONY: all clean install uninstall setup build test code-coverage
+build-lib: build-rust
+	cargo build --release
+	./postbuild.sh
+	meson compile -C client_api/build/
+
+build-rust:
+	cargo build --release
+	./postbuild.sh
+	
+
+.PHONY: all clean install uninstall setup setup-lib build build-rust build-lib test code-coverage
