@@ -39,7 +39,7 @@ uninstall:
 setup-lib: 
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
-	cd client_api && meson setup build
+	cd client_api && meson build --prefix=$(prefix)
 	meson compile -C client_api/build/
 
 test:
