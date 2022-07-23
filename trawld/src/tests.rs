@@ -1,9 +1,11 @@
-
 #[cfg(test)]
 pub mod unit_test {
     use crate::*;
+    use std::{
+        fs::File,
+        io::{self, Write},
+    };
     use uuid::Uuid;
-    use std::{io::{self, Write}, fs::File};
 
     #[allow(non_snake_case)]
     fn example_file_parsed() -> (&'static str, HashMap<String, String>) {
@@ -19,26 +21,27 @@ valid: \"line\"
  string\\: invalid
     :   
         ";
-        let expected_map:HashMap<_,_> = [
-            ("home_dir", "/home"), 
-            ("key_one", "val_one"), 
+        let expected_map: HashMap<_, _> = [
+            ("home_dir", "/home"),
+            ("key_one", "val_one"),
             ("lockscreen-timeout", "10"),
             ("valid", "\"line\""),
-            ("screen-resolution", "1920x1080")
-        ].iter()
-            .map(|&(k,v)| (k.to_string(),v.to_string()))
-            .collect();
+            ("screen-resolution", "1920x1080"),
+        ]
+        .iter()
+        .map(|&(k, v)| (k.to_string(), v.to_string()))
+        .collect();
         (CONTENTS, expected_map)
     }
 
     fn seed_args() -> CliArgs {
-        CliArgs{
+        CliArgs {
             load: None,
             cpp: None,
             nocpp: false,
             filename: None,
             debug: true,
-            verbose:false,
+            verbose: false,
         }
     }
     pub fn seed_resource_manager() -> ResourceManager {
@@ -47,7 +50,7 @@ valid: \"line\"
             resources: HashMap::new(),
             preprocessor: "/usr/bin/cpp".to_string(),
             logger: log::Logger::from(&args),
-            args
+            args,
         }
     }
     fn get_resource_seeded_manager() -> Result<ResourceManager, Box<dyn Error>> {
@@ -68,14 +71,14 @@ valid: \"line\"
     }
 
     #[test]
-    fn create_resource_manager_obj () {
+    fn create_resource_manager_obj() {
         let args = seed_args();
         let manager = ResourceManager::from_args(&args);
         let expected = ResourceManager {
             args: args.clone(),
             resources: HashMap::new(),
             logger: Logger::from(&args),
-            preprocessor: args.cpp.unwrap_or(String::from("/usr/bin/cpp"))
+            preprocessor: args.cpp.unwrap_or(String::from("/usr/bin/cpp")),
         };
         assert_eq!(expected, manager);
     }
@@ -96,7 +99,7 @@ valid: \"line\"
         assert_eq!(expected, query_result);
     }
 
-    #[test] 
+    #[test]
     fn get_resource() {
         let manager = get_resource_seeded_manager().unwrap();
         let expected = "1920x1080";
@@ -105,7 +108,7 @@ valid: \"line\"
     }
 
     #[test]
-    fn load() -> Result<(), Box<dyn Error>>{
+    fn load() -> Result<(), Box<dyn Error>> {
         let mut manager = get_resource_seeded_manager()?;
         let conf_str = "org: Regolith\nversion:0.1\n screen-resolution:1280x720";
         let mut actual = manager.resources.clone();
@@ -114,13 +117,13 @@ valid: \"line\"
             actual.entry(k).or_insert(v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.load_from_file(&path, false, "/usr/bin/cpp");
+        manager.load_from_file(&path, false, "/usr/bin/cpp", "");
         assert_eq!(manager.resources, actual);
         Ok(())
     }
 
     #[test]
-    fn merge() -> Result<(), Box<dyn Error>>{
+    fn merge() -> Result<(), Box<dyn Error>> {
         let mut manager = get_resource_seeded_manager()?;
         let conf_str = "org: Regolith\nversion:0.1\n screen-resolution:1280x720";
         let mut actual = manager.resources.clone();
@@ -130,14 +133,16 @@ valid: \"line\"
             actual.insert(k, v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.merge_from_file(&path, false, "/usr/bin/cpp");
+        manager.merge_from_file(&path, false, "/usr/bin/cpp", "");
         assert_eq!(manager.resources, actual);
         Ok(())
     }
 
     #[test]
     fn check_valid_key() {
-        let invalid_keys = ["hello'", "world\\", "`bad`", "string%", "comma,", "#hash", "no space"];
+        let invalid_keys = [
+            "hello'", "world\\", "`bad`", "string%", "comma,", "#hash", "no space",
+        ];
         let valid_keys = ["hello-world", "good_day", "sway.output", "normal"];
         let manager = seed_resource_manager();
         for key in invalid_keys {

@@ -1,33 +1,8 @@
-use trawldb::{Client, parser::CliArgs};
-use std::collections::HashMap;
-use std::{ fs::File, io};
 use io::Write;
+use std::collections::HashMap;
+use std::{fs::File, io};
+use trawldb::{parser::CliArgs, Client};
 use uuid::Uuid;
-
-//#[tokio::main]
-//async fn start_server (server: ResourceManager) {
-    //let fut = server.run_server();
-    //fut.await.expect("Failed to run server");
-//}
-//pub fn create_server() ->  Result<JoinHandle<()>, Box<dyn Error>> {
-    //let args = ServerArgs {
-        //load: None,
-        //cpp: None,
-        //filename: None,
-        //nocpp: false,
-        //debug: false,
-        //verbose: false,
-    //};
-    //let mut server = ResourceManager::from_args(&args);
-    //server.init();
-    //let server_handle = thread::spawn(|| start_server(server));
-    //Ok(server_handle)
-//}
-//#[tokio::main]
-//pub async fn terminate_server() {
-    //let client = Client::new().await.unwrap();
-    //client.proxy().quit().await.unwrap();
-//}
 
 fn new_tmp_file(contents: &str) -> Result<(File, String), io::Error> {
     let mut tmp_dir = std::env::temp_dir();
@@ -39,7 +14,6 @@ fn new_tmp_file(contents: &str) -> Result<(File, String), io::Error> {
     Ok((file_handle, tmp_dir.to_str().unwrap().to_string()))
 }
 
-
 fn get_config_str() -> (&'static str, HashMap<String, String>) {
     let config_str = "home_dir:/home
     key_one:val_one\t
@@ -50,17 +24,17 @@ fn get_config_str() -> (&'static str, HashMap<String, String>) {
     \"hello\' : invalid
     /home: invalid
     string\\: invalid";
-    let expected_map:HashMap<_,_> = [
-        ("home_dir", "/home"), 
-        ("key_one", "val_one"), 
+    let expected_map: HashMap<_, _> = [
+        ("home_dir", "/home"),
+        ("key_one", "val_one"),
         ("lockscreen-timeout", "10"),
         ("valid", "\"line\""),
-        ("screen-resolution", "1920x1080")
-    ].iter()
-        .map(|&(k,v)| (k.to_string(),v.to_string()))
-        .collect();
+        ("screen-resolution", "1920x1080"),
+    ]
+    .iter()
+    .map(|&(k, v)| (k.to_string(), v.to_string()))
+    .collect();
     (config_str, expected_map)
-    
 }
 
 fn get_file() -> (String, HashMap<String, String>) {
@@ -75,18 +49,20 @@ pub async fn get_resources_prop() -> zbus::Result<HashMap<String, String>> {
 }
 
 pub async fn arg_filename_default() -> HashMap<String, String> {
-    let (file_path,resources) = get_file();
+    let (file_path, resources) = get_file();
     let args = CliArgs {
         nocpp: false,
         filename: None,
         cpp: None,
-        load:  Some(file_path),
+        load: Some(file_path),
         merge: None,
         edit: None,
         backup: None,
-        get: None, 
+        get: None,
         query: None,
-        remove: false
+        remove: false,
+        define: vec![],
+        include: vec![],
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -96,19 +72,21 @@ pub async fn arg_filename_default() -> HashMap<String, String> {
 pub async fn arg_load() -> HashMap<String, String> {
     let mut curr_resources = arg_filename_default().await;
     let file_path = new_tmp_file("key_1: val2").unwrap().1;
-    curr_resources.insert(String::from("key_1"),String::from( "val2"));
+    curr_resources.insert(String::from("key_1"), String::from("val2"));
 
     let args = CliArgs {
         nocpp: false,
         filename: None,
         cpp: None,
-        load:  Some(file_path),
+        load: Some(file_path),
         merge: None,
         edit: None,
         backup: None,
-        get: None, 
+        get: None,
         query: None,
-        remove: false
+        remove: false,
+        define: vec![],
+        include: vec![],
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -118,7 +96,7 @@ pub async fn arg_load() -> HashMap<String, String> {
 pub async fn arg_merge() -> HashMap<String, String> {
     let mut curr_resources = arg_filename_default().await;
     let file = new_tmp_file("key_1: val2").unwrap().1;
-    curr_resources.insert(String::from("key_1"),String::from( "val2"));
+    curr_resources.insert(String::from("key_1"), String::from("val2"));
     let args = CliArgs {
         nocpp: false,
         filename: None,
@@ -127,9 +105,11 @@ pub async fn arg_merge() -> HashMap<String, String> {
         merge: Some(file),
         edit: None,
         backup: None,
-        get: None, 
+        get: None,
         query: None,
-        remove: false
+        remove: false,
+        define: vec![],
+        include: vec![],
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
@@ -152,7 +132,7 @@ pub async fn query_all_result() -> String {
 
 pub async fn arg_edit(bak: Option<String>) -> (String, String, String) {
     let _ = arg_filename_default().await;
-    let (_ , path) = new_tmp_file("hello world").unwrap();
+    let (_, path) = new_tmp_file("hello world").unwrap();
     let args = CliArgs {
         nocpp: false,
         filename: None,
@@ -161,13 +141,19 @@ pub async fn arg_edit(bak: Option<String>) -> (String, String, String) {
         merge: None,
         edit: Some(path.clone()),
         backup: bak.clone(),
-        get: None, 
+        get: None,
         query: None,
-        remove: false
+        remove: false,
+        define: vec![],
+        include: vec![],
     };
     let client = Client::new().await.unwrap();
     client.run(&args).await.unwrap();
-    (path.clone(), path + &bak.unwrap_or(String::from(".bak")), "hello world".to_string())
+    (
+        path.clone(),
+        path + &bak.unwrap_or(String::from(".bak")),
+        "hello world".to_string(),
+    )
 }
 
 pub async fn clear_resources() {

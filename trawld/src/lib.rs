@@ -50,6 +50,7 @@ impl ResourceManager {
             &filename.clone(),
             self.args.nocpp,
             &self.preprocessor.clone(),
+            "",
         );
     }
 
@@ -74,7 +75,9 @@ impl ResourceManager {
         file_path: &str,
         nocpp: bool,
         cpp: &str,
+        cpp_args: &str,
     ) -> Result<String, Box<dyn Error>> {
+        self.logger.info(&format!("{cpp} {cpp_args} {file_path}"));
         if nocpp {
             self.logger
                 .warn("wont use preprocessor - try running without --nocpp flag");
@@ -83,7 +86,14 @@ impl ResourceManager {
             self.logger.info(&config_str);
             return Ok(config_str);
         }
-        let output_bytes = self.preprocessor(cpp).arg(file_path).output()?.stdout;
+        let cmd_args = if cpp_args.trim() == "" {
+            [file_path].to_vec()
+        } else {
+            let mut args: Vec<&str> = cpp_args.split(" ").collect();
+            args.append(&mut [file_path].to_vec());
+            args
+        };
+        let output_bytes = self.preprocessor(cpp).args(cmd_args).output()?.stdout;
 
         let conf_utf8 = String::from_utf8(output_bytes)?;
         self.logger.info("File preprocessed successfully...");
@@ -123,8 +133,8 @@ impl ResourceManager {
     }
 
     /// Loads resources from the file. Doesn't override existing resources.
-    fn load_from_file(&mut self, file: &str, nocpp: bool, cpp: &str) {
-        let config_str = match self.get_preprocessed_file(file, nocpp, cpp) {
+    fn load_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &str) {
+        let config_str = match self.get_preprocessed_file(file, nocpp, cpp, args) {
             Ok(conf) => conf,
             Err(e) => {
                 self.logger.from_error(e);
@@ -145,8 +155,8 @@ impl ResourceManager {
 
     /// Merges resources from the file with the loaded resources. Overrides
     /// value if key already presen in resources.
-    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str) {
-        let config_str = match self.get_preprocessed_file(file, nocpp, cpp) {
+    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &str) {
+        let config_str = match self.get_preprocessed_file(file, nocpp, cpp, args) {
             Ok(conf) => conf,
             Err(e) => {
                 self.logger.from_error(e);
@@ -192,7 +202,7 @@ impl ResourceManager {
         path: &str,
         nocpp: bool,
     ) {
-        self.load_from_file(path, nocpp, &self.preprocessor.clone());
+        self.load_from_file(path, nocpp, &self.preprocessor.clone(), "");
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -203,7 +213,7 @@ impl ResourceManager {
         path: &str,
         nocpp: bool,
     ) {
-        self.merge_from_file(path, nocpp, &self.preprocessor.clone());
+        self.merge_from_file(path, nocpp, &self.preprocessor.clone(), "");
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -213,8 +223,9 @@ impl ResourceManager {
         #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
         cpp: &str,
+        args: &str,
     ) {
-        self.load_from_file(path, false, cpp);
+        self.load_from_file(path, false, cpp, args);
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -224,8 +235,9 @@ impl ResourceManager {
         #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
         cpp: &str,
+        args: &str,
     ) {
-        self.merge_from_file(path, false, cpp);
+        self.merge_from_file(path, false, cpp, args);
         self.emit_resources_changed(&ctxt).await;
     }
 

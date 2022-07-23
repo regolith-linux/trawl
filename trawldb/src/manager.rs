@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use zbus::{Result, dbus_proxy};
+use zbus::{dbus_proxy, Result};
 
 #[dbus_proxy(
     default_service = "org.regolith.Trawl",
@@ -10,8 +10,8 @@ use zbus::{Result, dbus_proxy};
 pub trait ResourceManager {
     fn load(&self, path: &str, nocpp: bool) -> Result<()>;
     fn merge(&self, path: &str, nocpp: bool) -> Result<()>;
-    fn load_cpp(&self, path: &str, cpp: &str) -> Result<()>;
-    fn merge_cpp(&self, path: &str, cpp: &str) -> Result<()>;
+    fn load_cpp(&self, path: &str, cpp: &str, args: &str) -> Result<()>;
+    fn merge_cpp(&self, path: &str, cpp: &str, args: &str) -> Result<()>;
     fn query(&self, q: &str) -> Result<String>;
     fn get_resource(&self, key: &str) -> Result<String>;
     fn set_resource(&self, key: String, value: String) -> Result<()>;
