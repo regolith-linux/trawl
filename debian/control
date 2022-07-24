@@ -1,0 +1,12 @@
+Source: trawl
+Section: unknown
+Priority: optional
+Maintainer: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
+Build-Depends: cargo, debhelper
+Standards-Version: 4.5.0
+
+Package: trawl
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: A display agnostic Config Manager

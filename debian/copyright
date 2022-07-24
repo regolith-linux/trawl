@@ -1,0 +1,53 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: trawl
+Upstream-Contact: <https://github.com/regolith-linux/trawl>
+Source: <preferred name and address to reach the upstream project>
+#
+# Please double check copyright with the licensecheck(1) command.
+
+Files:     .gitignore
+           Cargo.lock
+           Cargo.toml
+           Makefile
+           README.md
+           client_api/.gitignore
+           client_api/client_api.c
+           client_api/client_api.h
+           client_api/example/main.c
+           client_api/example/meson.build
+           client_api/meson.build
+           client_api/scripts/run_codegen.sh
+           client_api/scripts/uninstall.sh
+           examples/partials.d/swayidle
+           examples/resources
+           postbuild.sh
+           trawlcat/Cargo.toml
+           trawlcat/src/main.rs
+           trawld.service
+           trawld/Cargo.toml
+           trawld/src/common.rs
+           trawld/src/lib.rs
+           trawld/src/log.rs
+           trawld/src/main.rs
+           trawld/src/parser.rs
+           trawld/src/tests.rs
+           trawldb/Cargo.toml
+           trawldb/src/lib.rs
+           trawldb/src/main.rs
+           trawldb/src/manager.rs
+           trawldb/src/parser.rs
+           trawldb/tests/common.rs
+           trawldb/tests/integration_tests.rs
+License:   __UNKNOWN__
+ Licensed under either of
+ .
+ * [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+ .
+ * [MIT license](http://opensource.org/licenses/MIT)
+ .
+ at your option.
+
+
+#----------------------------------------------------------------------------
+# Files marked as NO_LICENSE_TEXT_FOUND may be covered by the following
+# license/copyright files.

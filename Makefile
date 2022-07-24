@@ -1,8 +1,10 @@
+#/usr/bin/make -f
+
 INSTALL = install
 INSTALL_PROGRAM = ${INSTALL} -D -m 0755
 INSTALL_DATA = ${INSTALL} -D -m 0644
 
-prefix = /usr
+prefix = ${DESTDIR}/usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datarootdir = $(prefix)/share
@@ -15,20 +17,37 @@ BIN_DB := trawldb
 
 all: setup build
 
+distclean: clean
+
+clean:
+	-cargo clean
+	-rm -r client_api/build
+
+build-arch: build
+
+build-independent: build
+
+binary: build
+
+binary-arch: build
+
+binary-independent: build
+
 build: build-rust build-lib
 
 setup: build-rust
 	-make setup-lib
 
-clean:
-	cargo clean
-
-install: setup build
-	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
-	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
-	sudo $(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
-	sudo $(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
+install: 
+	$(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
+	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
+	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
+	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
 	meson install -C client_api/build
+
+gen-service-xml:
+	./postbuild.sh
+
 
 uninstall:
 	rm -f "$(bindir)/$(BIN_C)"
@@ -53,7 +72,6 @@ code-coverage:
 
 build-lib: build-rust
 	cargo build --release
-	./postbuild.sh
 	meson compile -C client_api/build/
 
 build-rust:
@@ -61,4 +79,3 @@ build-rust:
 	./postbuild.sh
 	
 
-.PHONY: all clean install uninstall setup setup-lib build build-rust build-lib test code-coverage
