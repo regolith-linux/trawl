@@ -33,7 +33,7 @@ binary-arch: build
 
 binary-independent: build
 
-build: build-rust build-lib
+build: setup build-rust build-lib
 
 setup: build-rust
 	-make gen-service-xml
