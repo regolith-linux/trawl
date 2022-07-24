@@ -3,6 +3,7 @@
 INSTALL = install
 INSTALL_PROGRAM = ${INSTALL} -D -m 0755
 INSTALL_DATA = ${INSTALL} -D -m 0644
+MESON = python -m meson
 
 prefix = ${DESTDIR}/usr
 exec_prefix = $(prefix)
@@ -14,6 +15,7 @@ zshcpl = $(datarootdir)/zsh/site-functions
 BIN_D := trawld
 BIN_C := trawlcat
 BIN_DB := trawldb
+
 
 all: build
 
@@ -46,7 +48,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
 	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
-	meson install -C client_api
+	$(MESON) install -C client_api
 
 gen-service-xml:
 	./postbuild.sh
@@ -61,8 +63,8 @@ setup-lib:
 	pip install meson ninja
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
-	cd client_api && meson build --prefix=$(prefix)
-	meson compile -C client_api
+	cd client_api && $(MESON) build --prefix=$(prefix)
+	$(MESON) compile -C client_api
 
 test:
 	cargo test
@@ -74,7 +76,7 @@ code-coverage:
 	killall $(BIN_D)
 
 build-lib: 
-	meson compile -C client_api
+	$(MESON) compile -C client_api
 
 build-rust:
 	cargo build --release
