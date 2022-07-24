@@ -46,7 +46,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
 	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
-	cd client_api/build &&  ninja install
+	meson install -C client_api
 
 gen-service-xml:
 	./postbuild.sh
@@ -58,11 +58,11 @@ uninstall:
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
 setup-lib: 
+	pip install meson ninja
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
-	ln -s ../scripts ./
 	cd client_api && meson build --prefix=$(prefix)
-	-cd client_api/build &&  ninja 
+	meson compile -C client_api
 
 test:
 	cargo test
@@ -74,9 +74,8 @@ code-coverage:
 	killall $(BIN_D)
 
 build-lib: 
-	cd client_api/build &&  ninja 
+	meson compile -C client_api
 
 build-rust:
 	cargo build --release
-
 
