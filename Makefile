@@ -36,6 +36,7 @@ binary-independent: build
 build: build-rust build-lib
 
 setup: build-rust
+	-make gen-service-xml
 	-make setup-lib
 
 install: 
@@ -76,6 +77,5 @@ build-lib: build-rust
 
 build-rust:
 	cargo build --release
-	./postbuild.sh
-	
+
 
