@@ -60,6 +60,7 @@ uninstall:
 setup-lib: 
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
+	ln -s ../scripts ./
 	cd client_api && meson build --prefix=$(prefix)
 	-cd client_api/build &&  ninja 
 
