@@ -15,7 +15,7 @@ BIN_D := trawld
 BIN_C := trawlcat
 BIN_DB := trawldb
 
-all: setup build
+all: build
 
 distclean: clean
 
@@ -33,11 +33,13 @@ binary-arch: build
 
 binary-independent: build
 
-build: setup build-rust build-lib
+build: 
+	make build-rust
+	-make setup
+	make build-lib
 
-setup: build-rust
-	-make gen-service-xml
-	-make setup-lib
+
+setup: gen-service-xml setup-lib
 
 install: 
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
@@ -49,7 +51,6 @@ install:
 gen-service-xml:
 	./postbuild.sh
 
-
 uninstall:
 	rm -f "$(bindir)/$(BIN_C)"
 	rm -f "$(bindir)/$(BIN_D)"
@@ -60,7 +61,7 @@ setup-lib:
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
 	cd client_api && meson build --prefix=$(prefix)
-	cd client_api/build &&  meson compile
+	-cd client_api/build &&  meson compile
 
 test:
 	cargo test
