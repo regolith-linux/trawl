@@ -44,7 +44,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
 	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
-	meson install -C client_api/build
+	cd client_api/build &&  meson install
 
 gen-service-xml:
 	./postbuild.sh
@@ -60,7 +60,7 @@ setup-lib:
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
 	cd client_api && meson build --prefix=$(prefix)
-	meson compile -C client_api/build/
+	cd client_api/build &&  meson compile
 
 test:
 	cargo test
@@ -71,9 +71,8 @@ code-coverage:
 	cargo tarpaulin -b -- --test-threads 1 
 	killall $(BIN_D)
 
-build-lib: build-rust
-	cargo build --release
-	meson compile -C client_api/build/
+build-lib: 
+	cd client_api/build &&  meson compile
 
 build-rust:
 	cargo build --release
