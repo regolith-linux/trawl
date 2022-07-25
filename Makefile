@@ -1,7 +1,7 @@
 #/usr/bin/make -f
 
 INSTALL_PROGRAM = install -D -m 0755
-INSTALL_DATA = ${INSTALL} -D -m 0644
+INSTALL_DATA = install -D -m 0644
 
 prefix = ${DESTDIR}/usr
 exec_prefix = $(prefix)
