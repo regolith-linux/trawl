@@ -1,7 +1,6 @@
 #/usr/bin/make -f
 
-INSTALL = install
-INSTALL_PROGRAM = ${INSTALL} -D -m 0755
+INSTALL_PROGRAM = install -D -m 0755
 INSTALL_DATA = ${INSTALL} -D -m 0644
 MESON = meson
 
@@ -60,7 +59,6 @@ uninstall:
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
 setup-lib: 
-	pip install meson ninja
 	export PATH=~/.local/bin:$PATH
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h

@@ -2,7 +2,7 @@ Source: trawl
 Section: unknown
 Priority: optional
 Maintainer: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
-Build-Depends: cargo, debhelper, libglib2.0-dev, python3-pip
+Build-Depends: cargo, debhelper, libglib2.0-dev, meson (>=0.60)
 Standards-Version: 4.5.0
 
 Package: trawld
