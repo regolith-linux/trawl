@@ -3,7 +3,7 @@
 INSTALL = install
 INSTALL_PROGRAM = ${INSTALL} -D -m 0755
 INSTALL_DATA = ${INSTALL} -D -m 0644
-MESON = python -m meson
+MESON = meson
 
 prefix = ${DESTDIR}/usr
 exec_prefix = $(prefix)
