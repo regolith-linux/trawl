@@ -83,15 +83,15 @@
      -->
     <property name="Resources" type="a{ss}" access="read"/>
   </interface>
-  <interface name="org.freedesktop.DBus.Introspectable">
-    <method name="Introspect">
-      <arg type="s" direction="out"/>
-    </method>
-  </interface>
   <interface name="org.freedesktop.DBus.Peer">
     <method name="Ping">
     </method>
     <method name="GetMachineId">
+      <arg type="s" direction="out"/>
+    </method>
+  </interface>
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
       <arg type="s" direction="out"/>
     </method>
   </interface>

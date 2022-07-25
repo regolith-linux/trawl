@@ -2,7 +2,6 @@
 
 INSTALL_PROGRAM = install -D -m 0755
 INSTALL_DATA = ${INSTALL} -D -m 0644
-MESON = meson
 
 prefix = ${DESTDIR}/usr
 exec_prefix = $(prefix)
@@ -14,6 +13,8 @@ zshcpl = $(datarootdir)/zsh/site-functions
 BIN_D := trawld
 BIN_C := trawlcat
 BIN_DB := trawldb
+
+MESON = meson
 
 
 all: build
@@ -47,7 +48,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
 	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
-	$(MESON) install -C client_api
+	$(MESON) install -C client_api/build
 
 gen-service-xml:
 	./postbuild.sh
@@ -59,11 +60,10 @@ uninstall:
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
 setup-lib: 
-	export PATH=~/.local/bin:$PATH
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
 	cd client_api && $(MESON) build --prefix=$(prefix)
-	$(MESON) compile -C client_api
+	$(MESON) compile -C client_api/build
 
 test:
 	cargo test
@@ -75,7 +75,7 @@ code-coverage:
 	killall $(BIN_D)
 
 build-lib: 
-	$(MESON) compile -C client_api
+	$(MESON) compile -C client_api/build
 
 build-rust:
 	cargo build --release
