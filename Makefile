@@ -61,6 +61,7 @@ uninstall:
 
 setup-lib: 
 	pip install meson ninja
+	export PATH=~/.local/bin:$PATH
 	mkdir -p client_api/build
 	touch client_api/build/config_manager.h
 	cd client_api && $(MESON) build --prefix=$(prefix)
