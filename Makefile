@@ -66,7 +66,7 @@ setup-lib:
 	$(MESON) compile -C client_api/build
 
 test:
-	cargo test
+	cargo test -- --test-threads=1
 
 code-coverage:
 	cargo build --bin $(BIN_D)
