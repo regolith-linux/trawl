@@ -69,16 +69,9 @@ impl<'a> Client<'a> {
         include: &Vec<String>,
         define: &Vec<String>,
     ) -> Option<(String, String)> {
-        let include_args = include.iter().map(|s| {
-            let abs_path = match Self::get_absolute_path(s) {
-                Ok(path) => path,
-                Err(e) => {
-                    eprintln!("ERROR: {e}");
-                    std::process::exit(1)
-                }
-            };
-            format!("-I {abs_path}")
-        });
+        let include_args = include.iter()
+            .filter_map(|s| Self::get_absolute_path(s).ok())
+            .map(|s| format!("-I {s}"));
         let define_args = define.iter().map(|s| format!("-D {s}"));
         let args_list: Vec<String> = include_args.chain(define_args).collect();
         let args_str = args_list.join(" ");
