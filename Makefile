@@ -50,7 +50,7 @@ uninstall:
 	rm -f "$(bindir)/$(BIN_DB)"
 	rm -f "$(libdir)/systemd/user/$(BIN_D).service"
 
-test:
+run-test:
 	cargo test -- --test-threads=1
 
 code-coverage:
