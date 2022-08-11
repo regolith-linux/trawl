@@ -22,9 +22,3 @@ Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: A CLI for fetching value of trawl resource while ommitting surrounding quotes
-
-Package: libtrawldb
-Architecture: any
-Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: C library to interact with trawl.
