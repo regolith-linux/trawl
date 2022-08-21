@@ -1,4 +1,4 @@
-# Regolith Config Manager
+# Trawl
 
 Simple **Xresources** style linux based configuration system that is independent of distro / display backend (Wayland / X11 / etc).
 
@@ -7,8 +7,8 @@ Simple **Xresources** style linux based configuration system that is independent
 Make sure you have the rust toolchain (version >= 1.62) installed. Use the following commands to build all the binaries:
 
 ```bash
-git clone https://github.com/regolith-linux/regolith-config-manager.git
-cd regolith-config-manager
+git clone https://github.com/regolith-linux/trawl.git
+cd trawl
 make
 ```
 
@@ -21,8 +21,9 @@ make
 # Install Instructions
 
 ```bash
-git clone https://github.com/regolith-linux/regolith-config-manager.git
-cd regolith-config-manager
+git clone https://github.com/regolith-linux/trawl.git
+cd trawl
+# enable the "install" target in the Makefile
 make install
 systemctl daemon-reload
 systemctl enable --now trawld
@@ -49,9 +50,9 @@ Prefix the binaries with build directory path (`target/debug` or `target/release
   key1: value1
   key2: value2
   ```
-- A valid key is an acii alphanumeric string with no whitespace, but can include the following special characters -- **' - ', ' . ', ' \_ '**. Eg.
+- A valid key is an ASCII alphanumeric string with no whitespace, but can include the following special characters -- **' - ', ' . ', ' \_ '**. Eg.
   ```
-  sway-wm.screen_timout: 100
+  sway-wm.screen_timeout: 100
   ```
 - In case a line contains multiple colons (':'), the contents before the first colon are treated as key and the contents after the first colon are treated as value. Eg.
   ```
@@ -68,7 +69,7 @@ Prefix the binaries with build directory path (`target/debug` or `target/release
   ```c
   #define USERNAME "John Doe"
   ```
-- Just like in C, pats of the resource file can be ignored / included ccnditioinally using the `#ifdef` and `ifndef` directives.
+- Just like in C, pats of the resource file can be ignored / included conditionally using the `#ifdef` and `ifndef` directives.
   ```c
   #ifdef USERNAME
   swaylock.greeter.user USERNAME // USERNAME is replaced with John Doe
@@ -81,7 +82,7 @@ Run `trawld` to start the config daemon. You can pass optional arguments to the 
 
 ## Using the CLI Cleint (_trawldb_)
 
-The CLI client allows the user to interact with the config manager. Primary functions of the client include loading configurations fromo filesRun `trawldb --help` for more information.
+The CLI client allows the user to interact with the config manager. Primary functions of the client include loading configurations from files.  Run `trawldb --help` for more information.
 
 ### Examples
 
@@ -121,7 +122,7 @@ The CLI client allows the user to interact with the config manager. Primary func
 
 ## Get resource value (trawlcat)
 
-`trawlcat` is a drop-in replacement for `xrerscat` and prints the vlaue of the requested resouorce. For more info, see the ([xrerscat](https://github.com/regolith-linux/xrescat)) documentation.
+`trawlcat` is a drop-in replacement for `xrescat` and prints the value of the requested resource. For more info, see the ([xrerscat](https://github.com/regolith-linux/xrescat)) documentation.
 
 ## Client API (for C)
 
