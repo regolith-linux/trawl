@@ -14,11 +14,11 @@ Description: Configuration Manager daemon for trawl.
 Package: trawldb
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, trawld
 Description: A CLI for managing trawl resources
 
 Package: trawlcat
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, trawld
 Description: A CLI for fetching value of trawl resource while omitting surrounding quotes
