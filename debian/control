@@ -21,4 +21,4 @@ Package: trawlcat
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: A CLI for fetching value of trawl resource while ommitting surrounding quotes
+Description: A CLI for fetching value of trawl resource while omitting surrounding quotes
