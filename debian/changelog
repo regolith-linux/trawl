@@ -1,3 +1,19 @@
+trawl (0.2.0) focal; urgency=medium
+
+  [ Soumya Ranjan Patnaik ]
+  * Split into multiple binary packages
+  * Updated Makefile to be compatible with old meson and ninja
+  * Fixed unexpected program termination for (-I) args
+  * Updated interface file
+  * Moved client_api to dedicated repo
+  * Removed install file for libtrawldb
+  * Updated makefile
+
+  [ Regolith Linux ]
+  * Package metadata cleanup
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sun, 21 Aug 2022 13:03:22 -0700
+
 trawl (0.1-1) unstable; urgency=low
 
   * Initial release. 
