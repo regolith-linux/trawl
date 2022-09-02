@@ -21,4 +21,5 @@ Package: trawlcat
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}, trawld
+Provides: regolith-resource-loader
 Description: A CLI for fetching value of trawl resource while omitting surrounding quotes
