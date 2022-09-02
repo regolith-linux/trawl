@@ -1,5 +1,5 @@
 Source: trawl
-Section: unknown
+Section: utils
 Priority: optional
 Maintainer: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
 Build-Depends: cargo, debhelper, libglib2.0-dev, meson 
@@ -9,7 +9,7 @@ Package: trawld
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Configuration Manager daemon for trawl.
+Description: Configuration Manager daemon for trawl
 
 Package: trawldb
 Architecture: any

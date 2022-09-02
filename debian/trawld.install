@@ -1,2 +1,2 @@
-/usr/bin/trawld
-trawld.service /usr/lib/systemd/user/
+usr/bin/trawld
+trawld.service  usr/lib/systemd/user/
