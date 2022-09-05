@@ -1,13 +1,15 @@
 [package]
 name = "trawld"
-version = "0.1.0"
+version = "0.2.2"
 edition = "2021"
+license = "Apache-2.0"
+description = "Configuration Manager daemon for trawl"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version = "3.2.8", features = ["derive"] }
-tokio = { version = "1", features = ["full"]}
+tokio = { version = "1", features = ["full"] }
 zbus = { version = "2", default-features = false, features = ["tokio"] }
 colored = "2.0.0"
 
