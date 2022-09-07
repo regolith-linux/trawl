@@ -9,7 +9,12 @@ use std::{
     io::Write,
     path::Path,
 };
-use zbus::{export::futures_util::StreamExt, fdo::PropertiesProxy, zvariant::Value, Connection};
+use zbus::{
+    export::futures_util::StreamExt,
+    fdo::{PropertiesChanged, PropertiesProxy},
+    zvariant::Value,
+    Connection,
+};
 
 pub struct Client<'a> {
     connection: Connection,
@@ -40,19 +45,27 @@ impl<'a> Client<'a> {
     where
         T: FnMut(String, Value) -> (),
     {
+        loop {
+            let signal = self.get_props_changed_signal().await?;
+            let args = signal.args()?;
+            for (&name, value) in args.changed_properties().iter() {
+                callback(name.to_owned(), value.clone());
+            }
+        }
+    }
+
+    pub async fn get_props_changed_signal(&self) -> Result<PropertiesChanged, Box<dyn Error>> {
         let props = PropertiesProxy::builder(&self.connection)
             .destination("org.regolith.Trawl")?
             .path(self.proxy.path())?
             .build()
             .await?;
         let mut props_changed = props.receive_properties_changed().await?;
-        while let Some(signal) = props_changed.next().await {
-            let args = signal.args()?;
-            for (&name, value) in args.changed_properties().iter() {
-                callback(name.to_owned(), value.clone());
+        loop {
+            if let Some(signal) = props_changed.next().await {
+                return Ok(signal);
             }
         }
-        Ok(())
     }
 
     fn get_absolute_path(relative_path: &str) -> Result<String, Box<dyn Error>> {
@@ -69,7 +82,8 @@ impl<'a> Client<'a> {
         include: &Vec<String>,
         define: &Vec<String>,
     ) -> Option<(String, String)> {
-        let include_args = include.iter()
+        let include_args = include
+            .iter()
             .filter_map(|s| Self::get_absolute_path(s).ok())
             .map(|s| format!("-I {s}"));
         let define_args = define.iter().map(|s| format!("-D {s}"));
