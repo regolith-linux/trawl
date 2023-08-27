@@ -1,6 +1,6 @@
 [package]
 name = "trawlcat"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 license = "Apache-2.0"
 description = "A CLI for fetching value of trawl resource while omitting surrounding quotes"
@@ -11,3 +11,4 @@ description = "A CLI for fetching value of trawl resource while omitting surroun
 trawldb = "0.2.2"
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
+string-error = "0.1.0"
