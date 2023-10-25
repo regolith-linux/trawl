@@ -10,7 +10,7 @@ trawl (0.2.3) focal; urgency=medium
   * chore(trawlcat): bump trawldb version to 0.2.4
   * chore(trawlcat): bump package version
 
- -- Soumya Ranjan Panaik <soumyaranjan1812@gmail.com>  Wed, 25 Oct 2023 06:37:05 +0530
+ -- Regolith Linux <regolith.linux@gmail.com>  Wed, 25 Oct 2023 07:40:09 -0700
 
 trawl (0.2.2) focal; urgency=medium
 
