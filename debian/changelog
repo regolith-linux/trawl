@@ -1,8 +1,16 @@
-trawl (0.2.2ubuntu1) UNRELEASED; urgency=medium
+trawl (0.2.3) focal; urgency=medium
 
+  [ Soumya Ranjan Patnaik ]
   * Added function get_props_changed_signal
+  * feat: make trawlcat into a library
+  * chore: bump trawlcat package version
+  * feat: use rescat for the trawlcat binary
+  * chore: pin zvariant version to 3.4.1
+  * chore(trawldb): bump package version
+  * chore(trawlcat): bump trawldb version to 0.2.4
+  * chore(trawlcat): bump package version
 
- -- Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>  Thu, 15 Dec 2022 01:56:13 +0530
+ -- Soumya Ranjan Panaik <soumyaranjan1812@gmail.com>  Wed, 25 Oct 2023 06:37:05 +0530
 
 trawl (0.2.2) focal; urgency=medium
 
