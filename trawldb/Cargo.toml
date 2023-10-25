@@ -1,6 +1,6 @@
 [package]
 name = "trawldb"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 license = "Apache-2.0"
 description = "A CLI for managing trawl resources"
