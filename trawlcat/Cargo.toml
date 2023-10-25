@@ -8,7 +8,7 @@ description = "A CLI for fetching value of trawl resource while omitting surroun
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-trawldb = "0.2.2"
+trawldb = "0.2.4"
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 string-error = "0.1.0"
