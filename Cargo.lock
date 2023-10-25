@@ -958,6 +958,7 @@ dependencies = [
  "trawld 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid",
  "zbus",
+ "zvariant",
 ]
 
 [[package]]
