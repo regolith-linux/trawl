@@ -1,9 +1,11 @@
 [package]
 name = "trawldb"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 license = "Apache-2.0"
+authors = ["Soumya Ranjan Patniak <soumyaranjan1812@gmail.com>", "Ken Gilmer <kgilmer@gmail.com>"]
 description = "A CLI for managing trawl resources"
+repository = "https://github.com/regolith-linux/trawl"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,5 +16,5 @@ zbus = { version = "2", default-features = false, features = ["tokio"] }
 zvariant = "3.4.1"
 
 [dev-dependencies]
-trawld = "0.2.2"
+trawld = "0.2"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }

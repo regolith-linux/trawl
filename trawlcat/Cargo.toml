@@ -1,14 +1,16 @@
 [package]
 name = "trawlcat"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2021"
 license = "Apache-2.0"
+authors = ["Soumya Ranjan Patniak <soumyaranjan1812@gmail.com>", "Ken Gilmer <kgilmer@gmail.com>"]
 description = "A CLI for fetching value of trawl resource while omitting surrounding quotes"
+repository = "https://github.com/regolith-linux/trawl"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-trawldb = "0.2.4"
+trawldb = "0.2"
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 string-error = "0.1.0"
