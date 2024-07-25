@@ -16,5 +16,5 @@ zbus = { version = "2", default-features = false, features = ["tokio"] }
 zvariant = "3.4.1"
 
 [dev-dependencies]
-trawld = "0.2"
+trawld = "0.2.3"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
