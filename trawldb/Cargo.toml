@@ -1,6 +1,6 @@
 [package]
 name = "trawldb"
-version = "0.2.7"
+version = "0.2.8"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["Soumya Ranjan Patniak <soumyaranjan1812@gmail.com>", "Ken Gilmer <kgilmer@gmail.com>"]
@@ -12,8 +12,8 @@ repository = "https://github.com/regolith-linux/trawl"
 [dependencies]
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-zbus = { version = "4.4", default-features = false, features = ["tokio"] }
+zbus = { version = "4.3.1", default-features = false, features = ["tokio"] }
 
 [dev-dependencies]
-trawld = "0.2.5"
+trawld = "0.2.6"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
