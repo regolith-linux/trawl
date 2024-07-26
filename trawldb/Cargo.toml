@@ -12,8 +12,7 @@ repository = "https://github.com/regolith-linux/trawl"
 [dependencies]
 clap = { version = "3.2.8", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-zbus = { version = "2", default-features = false, features = ["tokio"] }
-zvariant = "3.4.1"
+zbus = { version = "4.4", default-features = false, features = ["tokio"] }
 
 [dev-dependencies]
 trawld = "0.2.4"
