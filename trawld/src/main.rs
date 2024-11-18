@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
     let mut manager = ResourceManager::from_args(&args);
     manager.init();
-    manager.run_server().await?;
+    let _conn = manager.run_server().await?;
     pending::<()>().await;
     Ok(())
 }

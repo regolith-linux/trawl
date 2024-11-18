@@ -7,7 +7,7 @@ use common::trim_str;
 use log::Logger;
 use parser::CliArgs;
 use std::{collections::HashMap, error::Error, fs, process::Command};
-use zbus::{dbus_interface, ConnectionBuilder, SignalContext};
+use zbus::{connection, interface, Connection, SignalContext};
 
 /// Stores and manages the resources
 #[derive(Debug, PartialEq, Eq)]
@@ -55,13 +55,12 @@ impl ResourceManager {
     }
 
     /// Runs the config daemon
-    pub async fn run_server(self) -> zbus::Result<()> {
-        ConnectionBuilder::session()?
+    pub async fn run_server(self) -> zbus::Result<Connection> {
+        connection::Builder::session()?
             .name("org.regolith.Trawl")?
             .serve_at("/org/regolith/Trawl", self)?
             .build()
-            .await?;
-        Ok(())
+            .await
     }
 
     /// Getter for preprocessor
@@ -193,7 +192,7 @@ impl ResourceManager {
     }
 }
 
-#[dbus_interface(name = "org.regolith.trawl1")]
+#[interface(name = "org.regolith.trawl1")]
 impl ResourceManager {
     /// DBus Interface to load resources from file
     async fn load(
@@ -341,7 +340,7 @@ impl ResourceManager {
     }
 
     /// DBus interface for getting resources values
-    #[dbus_interface(property)]
+    #[zbus(property)]
     pub fn resources(&self) -> HashMap<String, String> {
         self.resources.clone()
     }

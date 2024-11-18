@@ -1,12 +1,12 @@
-use std::error::Error;
-use string_error::into_err;
+use anyhow::{anyhow, Result};
 use trawldb::Client;
-pub async fn rescat(res_name: &str, default: Option<String>) -> Result<String, Box<dyn Error>> {
-    let client = Client::new().await?;
+pub async fn rescat(res_name: &str, default: Option<String>) -> Result<String> {
+    let Ok(client) = Client::new().await else {
+        return Err(anyhow!("Failed to connect to trawld"));
+    };
     let resource = client.proxy().get_resource(res_name).await?;
     if resource == String::new() {
-        let no_default_err = String::from("No default value provided");
-        default.ok_or(into_err(no_default_err))
+        default.ok_or(anyhow!("No default value provided"))
     } else {
         Ok(resource)
     }
