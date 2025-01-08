@@ -41,7 +41,7 @@ install:
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_C)" "$(bindir)/$(BIN_C)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_D)" "$(bindir)/$(BIN_D)"
 	$(INSTALL_PROGRAM) "./target/release/$(BIN_DB)" "$(bindir)/$(BIN_DB)"
-	$(INSTALL_DATA) "./$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
+	$(INSTALL_DATA) "./trawld/$(BIN_D).service" "$(libdir)/systemd/user/$(BIN_D).service"
 
 
 uninstall:
