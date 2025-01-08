@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use zbus::{dbus_proxy, Result};
+use zbus::{proxy, Result};
 
-#[dbus_proxy(
+#[proxy(
     default_service = "org.regolith.Trawl",
     default_path = "/org/regolith/Trawl",
     interface = "org.regolith.trawl1"

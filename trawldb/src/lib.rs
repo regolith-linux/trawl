@@ -49,7 +49,7 @@ impl<'a> Client<'a> {
             let signal = self.get_props_changed_signal().await?;
             let args = signal.args()?;
             for (&name, value) in args.changed_properties().iter() {
-                callback(name.to_owned(), value.clone());
+                callback(name.to_owned(), value.try_clone()?);
             }
         }
     }
@@ -57,7 +57,7 @@ impl<'a> Client<'a> {
     pub async fn get_props_changed_signal(&self) -> Result<PropertiesChanged, Box<dyn Error>> {
         let props = PropertiesProxy::builder(&self.connection)
             .destination("org.regolith.Trawl")?
-            .path(self.proxy.path())?
+            .path("/org/regolith/Trawl")?
             .build()
             .await?;
         let mut props_changed = props.receive_properties_changed().await?;
