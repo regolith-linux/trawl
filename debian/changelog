@@ -1,8 +1,32 @@
 trawl (0.2.4) focal; urgency=medium
 
-  * UNRELEASED
+  [ Soumya Ranjan Patnaik ]
+  * chore: add extra metadata to the packages
+  * feat: use absolute versioning for dependencies
+  * chore: bump version
+  * chore: update zbus version
+  * chore: bump versions
+  * chore: drop zbus version to 4.3 to allow for debian packaging
+  * chore: move the service file to inside the trawld package
+  * chore: fix author name typo
+  * chore: relax build dep on trawldb
+  * chore: relax build deps on trawlcat
 
- -- Regolith Linux <regolith.linux@gmail.com>  Tue, 28 Jan 2025 17:25:54 +0000
+  [ Russell Howe ]
+  * Fix typos in README.md
+
+  [ Regolith Linux ]
+  * fix: update build files for changed service file location
+
+  [ Khosrow Moossavi ]
+  * feat: enable github action to test pull requests
+  * feat: enable github action to publish to unstable
+  * feat: enable github action to publish to testing
+  * feat: enable github action to prepare release
+  * feat: enable github action to update changelog
+  * chore: use debian email and full name for updating changelog
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 28 Jan 2025 12:38:08 -0500
 
 trawl (0.2.3) focal; urgency=medium
 
