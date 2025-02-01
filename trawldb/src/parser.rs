@@ -1,7 +1,7 @@
-use clap::{AppSettings, Parser};
+use clap::Parser;
 
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
-#[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp))]
+#[clap(author, version, about, arg_required_else_help=true)]
 /// Config Manager Client for trawld
 pub struct CliArgs {
     /// load resources from file
@@ -53,8 +53,7 @@ pub struct CliArgs {
         short,
         long,
         value_parser,
-        min_values = 0,
-        max_values = 1,
+        num_args(0..=1),
         value_name = "string"
     )]
     pub query: Option<Vec<String>>,
