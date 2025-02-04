@@ -1,3 +1,11 @@
+trawl (0.2.5) focal; urgency=medium
+
+  [ Khosrow Moossavi ]
+  * fix: create release tag from correct git sha
+  * chore: remove update-changelog actions
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 04 Feb 2025 02:33:57 +0000
+
 trawl (0.2.4) focal; urgency=medium
 
   [ Soumya Ranjan Patnaik ]
