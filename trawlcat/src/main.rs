@@ -1,9 +1,9 @@
 use std::error::Error;
-use clap::{Parser, AppSettings};
+use clap::Parser;
 use trawlcat::rescat;
 
 #[derive(Parser)]
-#[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp))]
+#[clap(author, version, about, arg_required_else_help=true)]
 struct Args {
 
     /// resource name
