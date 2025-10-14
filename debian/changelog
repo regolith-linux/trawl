@@ -1,3 +1,22 @@
+trawl (0.2.5-1) focal; urgency=medium
+
+  [ Manthan Patil ]
+  * chore: migrate to clap 4
+
+  [ Khosrow Moossavi ]
+  * feat: use build-only to test pull request
+
+  [ Soumya Ranjan Patnaik ]
+  * chore: update cargo.lock
+  * chore: bump versions
+
+  [ Ken Gilmer ]
+  * Revert "chore: bump versions"
+  * Revert "chore: update cargo.lock"
+  * Revert "Merge pull request #8 from manthanabc/master"
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 14 Oct 2025 01:17:31 +0000
+
 trawl (0.2.5) focal; urgency=medium
 
   [ Khosrow Moossavi ]
