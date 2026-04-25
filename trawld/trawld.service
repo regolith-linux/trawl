@@ -12,4 +12,4 @@ Type=dbus
 BusName=org.regolith.Trawl
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
