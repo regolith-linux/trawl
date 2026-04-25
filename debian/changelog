@@ -1,3 +1,9 @@
+trawl (0.2.6) jammy; urgency=medium
+
+  * fix: fix target to remove cycle present in ubuntu 26.04 gdm3.  Fixes gdm3 breaking when regolith is installed
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sat, 25 Apr 2026 13:32:01 -0700
+
 trawl (0.2.5-1) focal; urgency=medium
 
   [ Manthan Patil ]
