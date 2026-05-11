@@ -1,0 +1,43 @@
+schema: pkgforge/v1
+package:
+  name: trawl
+  version: auto
+  revision: 1
+  summary: "Xresources-style configuration system"
+  description: |
+    Simple Xresources style linux based configuration system that is
+    independent of distro / display backend (Wayland / X11 / etc).
+    Uses DBus session bus for IPC so each user can run their own
+    instance of the config manager.
+  homepage: https://codeberg.org/regolith-desktop/trawl
+  license: MIT
+  maintainer:
+    name: "Regolith Desktop"
+    email: "kgilmer@users.noreply.codeberg.org"
+source:
+  type: git
+build:
+  kind: rust
+  build_depends:
+    - cargo
+    - rustc
+runtime:
+  depends:
+    - libc6
+    - dbus
+  files:
+    - /usr/bin/trawld
+    - /usr/bin/trawldb
+    - /usr/bin/trawlcat
+targets:
+  - format: deb
+    suite: trixie
+  - format: rpm
+    release: fc40
+  - format: arch
+    release: core
+publish:
+  registry:
+    base_url: https://codeberg.org
+    owner: auto
+  install_doc: INSTALL.md
