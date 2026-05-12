@@ -40,4 +40,4 @@ publish:
   registry:
     base_url: https://codeberg.org
     owner: auto
-  install_doc: INSTALL.md
+ 

@@ -20,6 +20,4 @@ jobs:
           PKGFORGE_REGISTRY_TOKEN: ${{ secrets.PKGFORGE_REGISTRY_TOKEN }}
         run: |
           command -v pkgforge >/dev/null || { echo "::error::pkgforge CLI not found"; exit 1; }
-          git config --global user.name "Regolith Desktop"
-          git config --global user.email "kgilmer@users.noreply.codeberg.org"
           pkgforge --spec pkgforge.yaml run
