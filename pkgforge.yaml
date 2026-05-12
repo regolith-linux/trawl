@@ -2,7 +2,7 @@ schema: pkgforge/v1
 package:
   name: trawl
   version: auto
-  revision: 1
+  revision: 2
   summary: "Xresources-style configuration system"
   description: |
     Simple Xresources style linux based configuration system that is
