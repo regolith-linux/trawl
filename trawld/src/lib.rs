@@ -6,7 +6,13 @@ pub mod tests;
 use common::trim_str;
 use log::Logger;
 use parser::CliArgs;
-use std::{collections::HashMap, error::Error, fs, process::Command};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fs::{self, File},
+    path::Path,
+    process::Command,
+};
 use zbus::{connection, interface, Connection, SignalContext};
 
 /// Stores and manages the resources
@@ -50,7 +56,7 @@ impl ResourceManager {
             &filename.clone(),
             self.args.nocpp,
             &self.preprocessor.clone(),
-            "",
+            &[],
         );
     }
 
@@ -74,9 +80,10 @@ impl ResourceManager {
         file_path: &str,
         nocpp: bool,
         cpp: &str,
-        cpp_args: &str,
+        cpp_args: &[String],
     ) -> Result<String, Box<dyn Error>> {
-        self.logger.info(&format!("{cpp} {cpp_args} {file_path}"));
+        self.logger
+            .info(&format!("{cpp} {cpp_args:?} < {file_path}"));
         if nocpp {
             self.logger
                 .warn("wont use preprocessor - try running without --nocpp flag");
@@ -85,19 +92,39 @@ impl ResourceManager {
             self.logger.info(&config_str);
             return Ok(config_str);
         }
-        let cmd_args = if cpp_args.trim() == "" {
-            [file_path].to_vec()
-        } else {
-            let mut args: Vec<&str> = cpp_args.split(" ").collect();
-            args.append(&mut [file_path].to_vec());
-            args
-        };
-        let output_bytes = self.preprocessor(cpp).args(cmd_args).output()?.stdout;
+        let output_bytes = self
+            .preprocessor_command(cpp, cpp_args, file_path)?
+            .output()?
+            .stdout;
 
         let conf_utf8 = String::from_utf8(output_bytes)?;
         self.logger.info("File preprocessed successfully...");
         self.logger.info(&conf_utf8);
         Ok(conf_utf8)
+    }
+
+    /// Builds the preprocessor command for a resource file.
+    ///
+    /// The file is passed on stdin and never named on the command line, so
+    /// the preprocessor can't take it for its output file, whatever the
+    /// arguments are. The trailing "-" (stdin) keeps cpp's optional output
+    /// operand from naming a file. The command runs in the file's directory
+    /// so that `#include "..."` stays relative to the file.
+    fn preprocessor_command(
+        &self,
+        cpp: &str,
+        cpp_args: &[String],
+        file_path: &str,
+    ) -> Result<Command, Box<dyn Error>> {
+        let input = File::open(file_path)?;
+        let mut command = self.preprocessor(cpp);
+        command.args(cpp_args).arg("-").stdin(input);
+        if let Some(dir) = Path::new(file_path).parent() {
+            if !dir.as_os_str().is_empty() {
+                command.current_dir(dir);
+            }
+        }
+        Ok(command)
     }
 
     /// Checks if a given key is a valid resource name
@@ -132,7 +159,7 @@ impl ResourceManager {
     }
 
     /// Loads resources from the file. Doesn't override existing resources.
-    fn load_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &str) {
+    fn load_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &[String]) {
         let config_str = match self.get_preprocessed_file(file, nocpp, cpp, args) {
             Ok(conf) => conf,
             Err(e) => {
@@ -154,7 +181,7 @@ impl ResourceManager {
 
     /// Merges resources from the file with the loaded resources. Overrides
     /// value if key already presen in resources.
-    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &str) {
+    fn merge_from_file(&mut self, file: &str, nocpp: bool, cpp: &str, args: &[String]) {
         let config_str = match self.get_preprocessed_file(file, nocpp, cpp, args) {
             Ok(conf) => conf,
             Err(e) => {
@@ -192,6 +219,11 @@ impl ResourceManager {
     }
 }
 
+/// Splits the argument string of the `LoadCpp` and `MergeCpp` methods.
+fn split_legacy_args(args: &str) -> Vec<String> {
+    args.split_whitespace().map(String::from).collect()
+}
+
 #[interface(name = "org.regolith.trawl1")]
 impl ResourceManager {
     /// DBus Interface to load resources from file
@@ -201,7 +233,7 @@ impl ResourceManager {
         path: &str,
         nocpp: bool,
     ) {
-        self.load_from_file(path, nocpp, &self.preprocessor.clone(), "");
+        self.load_from_file(path, nocpp, &self.preprocessor.clone(), &[]);
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -212,11 +244,13 @@ impl ResourceManager {
         path: &str,
         nocpp: bool,
     ) {
-        self.merge_from_file(path, nocpp, &self.preprocessor.clone(), "");
+        self.merge_from_file(path, nocpp, &self.preprocessor.clone(), &[]);
         self.emit_resources_changed(&ctxt).await;
     }
 
-    /// DBus Interface to load resources from file using custom preprocessor
+    /// DBus Interface to load resources from file using custom preprocessor.
+    /// `args` is split on whitespace, so an argument can't contain a space;
+    /// use `LoadCppArgv` instead.
     async fn load_cpp(
         &mut self,
         #[zbus(signal_context)] ctxt: SignalContext<'_>,
@@ -224,11 +258,13 @@ impl ResourceManager {
         cpp: &str,
         args: &str,
     ) {
-        self.load_from_file(path, false, cpp, args);
+        self.load_from_file(path, false, cpp, &split_legacy_args(args));
         self.emit_resources_changed(&ctxt).await;
     }
 
-    /// DBus Interface to merge resources from file using custom preprocessor
+    /// DBus Interface to merge resources from file using custom preprocessor.
+    /// `args` is split on whitespace, so an argument can't contain a space;
+    /// use `MergeCppArgv` instead.
     async fn merge_cpp(
         &mut self,
         #[zbus(signal_context)] ctxt: SignalContext<'_>,
@@ -236,7 +272,33 @@ impl ResourceManager {
         cpp: &str,
         args: &str,
     ) {
-        self.merge_from_file(path, false, cpp, args);
+        self.merge_from_file(path, false, cpp, &split_legacy_args(args));
+        self.emit_resources_changed(&ctxt).await;
+    }
+
+    /// DBus Interface to load resources from file using custom preprocessor.
+    /// Each element of `args` is passed to the preprocessor as one argument.
+    async fn load_cpp_argv(
+        &mut self,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
+        path: &str,
+        cpp: &str,
+        args: Vec<String>,
+    ) {
+        self.load_from_file(path, false, cpp, &args);
+        self.emit_resources_changed(&ctxt).await;
+    }
+
+    /// DBus Interface to merge resources from file using custom preprocessor.
+    /// Each element of `args` is passed to the preprocessor as one argument.
+    async fn merge_cpp_argv(
+        &mut self,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
+        path: &str,
+        cpp: &str,
+        args: Vec<String>,
+    ) {
+        self.merge_from_file(path, false, cpp, &args);
         self.emit_resources_changed(&ctxt).await;
     }
 

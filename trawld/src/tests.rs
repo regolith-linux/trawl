@@ -2,8 +2,9 @@
 pub mod unit_test {
     use crate::*;
     use std::{
-        fs::File,
+        fs::{self, File},
         io::{self, Write},
+        path::PathBuf,
     };
     use uuid::Uuid;
 
@@ -117,7 +118,7 @@ valid: \"line\"
             actual.entry(k).or_insert(v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.load_from_file(&path, false, "/usr/bin/cpp", "");
+        manager.load_from_file(&path, false, "/usr/bin/cpp", &[]);
         assert_eq!(manager.resources, actual);
         Ok(())
     }
@@ -133,9 +134,90 @@ valid: \"line\"
             actual.insert(k, v);
         }
         let (_, path) = new_tmp_file(conf_str)?;
-        manager.merge_from_file(&path, false, "/usr/bin/cpp", "");
+        manager.merge_from_file(&path, false, "/usr/bin/cpp", &[]);
         assert_eq!(manager.resources, actual);
         Ok(())
+    }
+
+    /// Creates a directory whose path contains one space, holding a resource
+    /// file that includes one file from an include directory and one file
+    /// next to it, and uses the macro NAME.
+    /// Returns (resource file, include directory, resource file contents).
+    fn new_spaced_tree() -> Result<(String, String, String), io::Error> {
+        let mut root: PathBuf = std::env::temp_dir();
+        root.push(format!("trawl-{} home", Uuid::new_v4()));
+        let include_dir = root.join("Xresources.d");
+        fs::create_dir_all(&include_dir)?;
+        fs::write(include_dir.join("extra"), "extra.key: 1\n")?;
+        fs::write(root.join("local"), "local.key: 2\n")?;
+        let contents = "#include <extra>\n#include \"local\"\nname.key: NAME\n";
+        let file = root.join("Xresources");
+        fs::write(&file, contents)?;
+        Ok((
+            file.to_str().unwrap().to_string(),
+            include_dir.to_str().unwrap().to_string(),
+            contents.to_string(),
+        ))
+    }
+
+    #[test]
+    fn merge_with_spaces_in_cpp_args() -> Result<(), Box<dyn Error>> {
+        let mut manager = seed_resource_manager();
+        let (file, include_dir, contents) = new_spaced_tree()?;
+        let args: Vec<String> = ["-I", &include_dir, "-D", "NAME=a b"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        manager.merge_from_file(&file, false, "/usr/bin/cpp", &args);
+        assert_eq!(fs::read_to_string(&file)?, contents);
+        assert_eq!(manager.get_resource("extra.key"), "1");
+        assert_eq!(manager.get_resource("local.key"), "2");
+        assert_eq!(manager.get_resource("name.key"), "a b");
+        Ok(())
+    }
+
+    #[test]
+    fn load_with_spaces_in_cpp_args() -> Result<(), Box<dyn Error>> {
+        let mut manager = seed_resource_manager();
+        let (file, include_dir, contents) = new_spaced_tree()?;
+        let args = vec![String::from("-I"), include_dir, String::from("-DNAME=x")];
+        manager.load_from_file(&file, false, "/usr/bin/cpp", &args);
+        assert_eq!(fs::read_to_string(&file)?, contents);
+        assert_eq!(manager.get_resource("extra.key"), "1");
+        assert_eq!(manager.get_resource("local.key"), "2");
+        assert_eq!(manager.get_resource("name.key"), "x");
+        Ok(())
+    }
+
+    #[test]
+    fn legacy_args_with_spaces_keep_file() -> Result<(), Box<dyn Error>> {
+        // The whitespace-separated string of LoadCpp/MergeCpp can't carry an
+        // argument with a space; the preprocessor then sees an extra operand,
+        // which cpp would take as its input, and the next one as its output.
+        // That must never touch the resource file.
+        let mut manager = seed_resource_manager();
+        let (file, include_dir, contents) = new_spaced_tree()?;
+        let legacy = format!("-I {include_dir}");
+        manager.merge_from_file(&file, false, "/usr/bin/cpp", &split_legacy_args(&legacy));
+        assert_eq!(fs::read_to_string(&file)?, contents);
+        manager.load_from_file(
+            &file,
+            false,
+            "/usr/bin/cpp",
+            &split_legacy_args("-D NAME=a b"),
+        );
+        assert_eq!(fs::read_to_string(&file)?, contents);
+        Ok(())
+    }
+
+    #[test]
+    fn split_legacy_cpp_args() {
+        assert_eq!(split_legacy_args(""), Vec::<String>::new());
+        assert_eq!(split_legacy_args("  "), Vec::<String>::new());
+        assert_eq!(
+            split_legacy_args("-I /usr/share -D MODKEY=Mod4  -D SWAY"),
+            vec!["-I", "/usr/share", "-D", "MODKEY=Mod4", "-D", "SWAY"]
+        );
     }
 
     #[test]

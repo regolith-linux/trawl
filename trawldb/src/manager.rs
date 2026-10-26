@@ -12,6 +12,8 @@ pub trait ResourceManager {
     fn merge(&self, path: &str, nocpp: bool) -> Result<()>;
     fn load_cpp(&self, path: &str, cpp: &str, args: &str) -> Result<()>;
     fn merge_cpp(&self, path: &str, cpp: &str, args: &str) -> Result<()>;
+    fn load_cpp_argv(&self, path: &str, cpp: &str, args: &[String]) -> Result<()>;
+    fn merge_cpp_argv(&self, path: &str, cpp: &str, args: &[String]) -> Result<()>;
     fn query(&self, q: &str) -> Result<String>;
     fn get_resource(&self, key: &str) -> Result<String>;
     fn set_resource(&self, key: String, value: String) -> Result<()>;

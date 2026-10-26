@@ -1078,24 +1078,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "trawld"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b06315e76739dcf0f3716df4ad96e8d64cbf8081c36663fec677807fcee8daa1"
-dependencies = [
- "clap",
- "colored",
- "tokio",
- "zbus",
-]
-
-[[package]]
 name = "trawldb"
 version = "0.2.9"
 dependencies = [
  "clap",
  "tokio",
- "trawld 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "trawld",
  "uuid",
  "zbus",
 ]
