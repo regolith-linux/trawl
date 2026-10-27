@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+# Debian and Ubuntu ship their own trawld build (source rust-trawld), which
+# enables trawld.service for every user session through
+# /etc/systemd/user/default.target.wants. This package does not enable the
+# service: the Regolith Wayland session starts it (regolith-wayland.service
+# Requires=trawld.service). When this package replaces the distribution build,
+# drop the enablement that build's maintainer scripts recorded, so trawld no
+# longer starts in other sessions and in the login screen's user session.
+# deb-systemd-helper only removes links it created itself, so a unit enabled
+# by the administrator with systemctl is left alone.
+if [ "$1" = "configure" ] && [ -x /usr/bin/deb-systemd-helper ]; then
+	deb-systemd-helper --user purge 'trawld.service' >/dev/null 2>&1 || true
+fi
+
+#DEBHELPER#
+
+exit 0
