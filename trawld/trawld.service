@@ -1,11 +1,11 @@
 [Unit]
 Description=Trawl Configuration Daemon
-StartLimitInterval=200
-StartLimitBurst=2
+# Stop restarting only when trawld crash-loops (5 starts in 10 s)
+StartLimitIntervalSec=10
+StartLimitBurst=5
 
 [Service]
 ExecStart=/usr/bin/trawld
-Restart=on-failure
 Restart=always
 RestartSec=1
 Type=dbus
