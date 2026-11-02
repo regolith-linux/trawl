@@ -60,6 +60,11 @@ async fn edit() {
     let expected = client.proxy().query("").await.unwrap();
     let (path, bak, bak_expected) = arg_edit(None).await;
     let contents = fs::read_to_string(&path).unwrap();
+    // The file's own line stays, the resources are appended
+    let expected: String = std::iter::once(bak_expected.as_str())
+        .chain(expected.lines())
+        .map(|line| format!("{line}\n"))
+        .collect();
     assert_eq!(expected, contents);
     let bak_content = fs::read_to_string(&bak).unwrap();
     assert_eq!(bak_expected, bak_content);

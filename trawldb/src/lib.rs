@@ -16,6 +16,8 @@ use zbus::{
     Connection,
 };
 
+mod edit;
+
 pub struct Client<'a> {
     connection: Connection,
     proxy: ResourceManagerProxy<'a>,
@@ -219,8 +221,15 @@ impl<'a> Client<'a> {
             // Ask trawld first: if it can't be reached, the file stays as is
             let res_str = self.proxy.query("").await?;
             let path_obj = Path::new(path);
+            let existing = match fs::read(path_obj) {
+                Ok(bytes) => Some(bytes),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+                Err(e) => return Err(format!("can't read file '{path}': {e}").into()),
+            };
+            // Like xrdb -edit: the file keeps everything but the values
+            let edited = edit::edit_into(existing.as_deref().unwrap_or_default(), &res_str);
             // Backup exiting file with same name, if exists
-            if path_obj.exists() {
+            if existing.is_some() {
                 let ext = match &args.backup {
                     Some(e) => e,
                     None => ".bak",
@@ -230,7 +239,7 @@ impl<'a> Client<'a> {
                 fs::rename(path_obj, bak_name)?;
             }
             let mut file_handle = File::create(path_obj)?;
-            file_handle.write_all(res_str.as_bytes())?;
+            file_handle.write_all(&edited)?;
         }
         Ok(())
     }
