@@ -7,6 +7,8 @@ use trawld::{ResourceManager, parser::CliArgs};
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = match CliArgs::try_parse() {
         Ok(args) => args,
+        // --help and --version aren't errors: print them and exit 0
+        Err(e) if !e.use_stderr() => e.exit(),
         Err(e) => {
             eprintln!("Error parsing: {e}");
             process::exit(1);
