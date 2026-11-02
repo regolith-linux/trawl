@@ -5,25 +5,49 @@
 //! it from a blocking task, never while it holds the resources.
 
 use std::{
-    fs::{self, File},
+    fs::File,
+    io::Read,
     path::Path,
-    process::Command,
+    process::{Command, Stdio},
 };
 
-/// Reads `path`, through the preprocessor unless `nocpp` is set.
+/// Result of reading one input: the text to parse and the preprocessor's
+/// diagnostics, if it printed any.
+pub struct ReadInput {
+    pub text: String,
+    pub diagnostics: String,
+}
+
+/// Reads `path`, through the preprocessor unless `nocpp` is set. Fails if
+/// the file can't be opened or read, or the preprocessor can't be run.
 pub fn read_file(
     path: &str,
     nocpp: bool,
     cpp: &str,
     cpp_args: &[String],
-) -> Result<String, String> {
-    if nocpp {
-        return fs::read_to_string(path).map_err(|e| e.to_string());
+) -> Result<ReadInput, String> {
+    let mut file = File::open(path).map_err(|e| format!("can't open file '{path}': {e}"))?;
+    if file.metadata().map(|m| m.is_dir()).unwrap_or(false) {
+        return Err(format!("can't read file '{path}': it is a directory"));
     }
-    let output = preprocessor_command(cpp, cpp_args, path)
-        .and_then(|mut command| command.output())
-        .map_err(|e| e.to_string())?;
-    String::from_utf8(output.stdout).map_err(|e| e.to_string())
+    if nocpp {
+        let mut text = String::new();
+        file.read_to_string(&mut text)
+            .map_err(|e| format!("can't read file '{path}': {e}"))?;
+        return Ok(ReadInput {
+            text,
+            diagnostics: String::new(),
+        });
+    }
+    let output = preprocessor_command(cpp, cpp_args, path, file)
+        .output()
+        .map_err(|e| format!("can't run preprocessor '{cpp}': {e}"))?;
+    let text =
+        String::from_utf8(output.stdout).map_err(|e| format!("can't read file '{path}': {e}"))?;
+    Ok(ReadInput {
+        text,
+        diagnostics: String::from_utf8_lossy(&output.stderr).into_owned(),
+    })
 }
 
 /// Builds the preprocessor command for a resource file.
@@ -33,18 +57,18 @@ pub fn read_file(
 /// arguments are. The trailing "-" (stdin) keeps cpp's optional output
 /// operand from naming a file. The command runs in the file's directory
 /// so that `#include "..."` stays relative to the file.
-fn preprocessor_command(
-    cpp: &str,
-    cpp_args: &[String],
-    file_path: &str,
-) -> std::io::Result<Command> {
-    let input = File::open(file_path)?;
+fn preprocessor_command(cpp: &str, cpp_args: &[String], file_path: &str, input: File) -> Command {
     let mut command = Command::new(cpp);
-    command.args(cpp_args).arg("-").stdin(input);
+    command
+        .args(cpp_args)
+        .arg("-")
+        .stdin(input)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     if let Some(dir) = Path::new(file_path).parent() {
         if !dir.as_os_str().is_empty() {
             command.current_dir(dir);
         }
     }
-    Ok(command)
+    command
 }

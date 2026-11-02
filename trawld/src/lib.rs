@@ -12,7 +12,7 @@ use std::{
     error::Error,
     sync::{Arc, Mutex, MutexGuard},
 };
-use zbus::{connection, interface, Connection, SignalContext};
+use zbus::{connection, fdo, interface, Connection, SignalContext};
 
 /// Stores and manages the resources
 #[derive(Debug, PartialEq, Eq)]
@@ -82,7 +82,17 @@ impl ResourceManager {
     ) -> Result<String, Box<dyn Error>> {
         self.logger
             .info(&format!("{cpp} {cpp_args:?} < {file_path}"));
-        Ok(input::read_file(file_path, nocpp, cpp, cpp_args)?)
+        let read = input::read_file(file_path, nocpp, cpp, cpp_args)?;
+        self.log_diagnostics(file_path, &read.diagnostics);
+        Ok(read.text)
+    }
+
+    fn log_diagnostics(&self, file_path: &str, diagnostics: &str) {
+        if !diagnostics.trim().is_empty() {
+            self.logger.warn(&format!(
+                "preprocessor output for {file_path}:\n{diagnostics}"
+            ));
+        }
     }
 
     /// Checks if a given key is a valid resource name
@@ -280,19 +290,24 @@ impl Trawl {
         nocpp: bool,
         cpp: &str,
         args: Vec<String>,
-    ) {
+    ) -> fdo::Result<()> {
         let (path, cpp) = (path.to_owned(), cpp.to_owned());
         let task_path = path.clone();
         let read =
             tokio::task::spawn_blocking(move || input::read_file(&task_path, nocpp, &cpp, &args))
                 .await
-                .unwrap_or_else(|e| Err(format!("reading '{path}' failed: {e}")));
+                .map_err(|e| fdo::Error::Failed(format!("reading '{path}' failed: {e}")))?;
         match read {
-            Ok(text) => {
-                self.apply(mode, &text);
+            Ok(read) => {
+                self.manager().log_diagnostics(&path, &read.diagnostics);
+                self.apply(mode, &read.text);
                 self.emit_resources_changed(ctxt).await;
+                Ok(())
             }
-            Err(e) => self.manager().logger.error(&e),
+            Err(e) => {
+                self.manager().logger.error(&e);
+                Err(fdo::Error::Failed(e))
+            }
         }
     }
 }
@@ -300,7 +315,12 @@ impl Trawl {
 #[interface(name = "org.regolith.trawl1")]
 impl Trawl {
     /// DBus Interface to load resources from file
-    async fn load(&self, #[zbus(signal_context)] ctxt: SignalContext<'_>, path: &str, nocpp: bool) {
+    async fn load(
+        &self,
+        #[zbus(signal_context)] ctxt: SignalContext<'_>,
+        path: &str,
+        nocpp: bool,
+    ) -> fdo::Result<()> {
         let cpp = self.preprocessor.clone();
         self.from_file(&ctxt, Mode::Load, path, nocpp, &cpp, Vec::new())
             .await
@@ -312,7 +332,7 @@ impl Trawl {
         #[zbus(signal_context)] ctxt: SignalContext<'_>,
         path: &str,
         nocpp: bool,
-    ) {
+    ) -> fdo::Result<()> {
         let cpp = self.preprocessor.clone();
         self.from_file(&ctxt, Mode::Merge, path, nocpp, &cpp, Vec::new())
             .await
@@ -327,7 +347,7 @@ impl Trawl {
         path: &str,
         cpp: &str,
         args: &str,
-    ) {
+    ) -> fdo::Result<()> {
         self.from_file(&ctxt, Mode::Load, path, false, cpp, split_legacy_args(args))
             .await
     }
@@ -341,7 +361,7 @@ impl Trawl {
         path: &str,
         cpp: &str,
         args: &str,
-    ) {
+    ) -> fdo::Result<()> {
         self.from_file(
             &ctxt,
             Mode::Merge,
@@ -361,7 +381,7 @@ impl Trawl {
         path: &str,
         cpp: &str,
         args: Vec<String>,
-    ) {
+    ) -> fdo::Result<()> {
         self.from_file(&ctxt, Mode::Load, path, false, cpp, args)
             .await
     }
@@ -374,7 +394,7 @@ impl Trawl {
         path: &str,
         cpp: &str,
         args: Vec<String>,
-    ) {
+    ) -> fdo::Result<()> {
         self.from_file(&ctxt, Mode::Merge, path, false, cpp, args)
             .await
     }
