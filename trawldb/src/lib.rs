@@ -216,6 +216,8 @@ impl<'a> Client<'a> {
         }
         // Edit into file
         if let Some(path) = &args.edit {
+            // Ask trawld first: if it can't be reached, the file stays as is
+            let res_str = self.proxy.query("").await?;
             let path_obj = Path::new(path);
             // Backup exiting file with same name, if exists
             if path_obj.exists() {
@@ -228,7 +230,6 @@ impl<'a> Client<'a> {
                 fs::rename(path_obj, bak_name)?;
             }
             let mut file_handle = File::create(path_obj)?;
-            let res_str = self.proxy.query("").await?;
             file_handle.write_all(res_str.as_bytes())?;
         }
         Ok(())
