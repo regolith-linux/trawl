@@ -188,6 +188,11 @@ impl<'a> Client<'a> {
     }
 
     pub async fn run(&self, args: &CliArgs) -> Result<(), Box<dyn Error>> {
+        // Remove first, so that `--remove --load/--merge file` replaces the
+        // resources with the file's instead of removing what was just added
+        if args.remove {
+            self.proxy().remove_all().await?;
+        }
         // Load file (default)
         if args.load.is_some() || args.filename.is_some() {
             let file = match &args.load {
@@ -225,9 +230,6 @@ impl<'a> Client<'a> {
             let mut file_handle = File::create(path_obj)?;
             let res_str = self.proxy.query("").await?;
             file_handle.write_all(res_str.as_bytes())?;
-        }
-        if args.remove {
-            self.proxy().remove_all().await?;
         }
         Ok(())
     }
