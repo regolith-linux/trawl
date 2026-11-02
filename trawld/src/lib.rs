@@ -399,6 +399,19 @@ impl Trawl {
             .await
     }
 
+    /// Loads resources from text the caller already read (and preprocessed).
+    /// Doesn't override existing resources.
+    async fn load_text(&self, #[zbus(signal_context)] ctxt: SignalContext<'_>, text: &str) {
+        self.apply(Mode::Load, text);
+        self.emit_resources_changed(&ctxt).await;
+    }
+
+    /// Merges resources from text the caller already read (and preprocessed).
+    async fn merge_text(&self, #[zbus(signal_context)] ctxt: SignalContext<'_>, text: &str) {
+        self.apply(Mode::Merge, text);
+        self.emit_resources_changed(&ctxt).await;
+    }
+
     /// Returns all the matching
     fn query(&self, q: &str) -> String {
         self.manager().query(q)
