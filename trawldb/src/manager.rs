@@ -18,7 +18,6 @@ pub trait ResourceManager {
     fn get_resource(&self, key: &str) -> Result<String>;
     fn set_resource(&self, key: String, value: String) -> Result<()>;
     fn add_resource(&self, key: String, value: String) -> Result<()>;
-    fn quit(&self) -> Result<()>;
     fn remove_one(&self, key: &str) -> Result<()>;
     fn remove_all(&self) -> Result<()>;
 
