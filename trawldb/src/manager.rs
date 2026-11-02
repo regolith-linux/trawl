@@ -6,7 +6,6 @@ use zbus::{proxy, Result};
     default_path = "/org/regolith/Trawl",
     interface = "org.regolith.trawl1"
 )]
-#[dbus_proxy]
 pub trait ResourceManager {
     fn load(&self, path: &str, nocpp: bool) -> Result<()>;
     fn merge(&self, path: &str, nocpp: bool) -> Result<()>;
@@ -22,6 +21,6 @@ pub trait ResourceManager {
     fn remove_one(&self, key: &str) -> Result<()>;
     fn remove_all(&self) -> Result<()>;
 
-    #[dbus_proxy(property)]
+    #[zbus(property)]
     fn resources(&self) -> Result<HashMap<String, String>>;
 }
