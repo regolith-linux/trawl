@@ -4,7 +4,7 @@ use clap::{AppSettings, Parser};
 #[clap(author, version, about, setting(AppSettings::ArgRequiredElseHelp))]
 /// Config Manager Client for trawld
 pub struct CliArgs {
-    /// load resources from file
+    /// load resources from file ("-" or no file: stdin)
     #[clap(
         short,
         long,
@@ -12,14 +12,14 @@ pub struct CliArgs {
         conflicts_with = "filename",
         value_name = "filename"
     )]
-    pub load: Option<String>,
+    pub load: Option<Option<String>>,
 
-    /// merge resources from file & sort
+    /// merge resources from file & sort ("-" or no file: stdin)
     #[clap(short, long, value_parser, value_name = "filename")]
-    pub merge: Option<String>,
+    pub merge: Option<Option<String>>,
 
-    /// preprocessor to use [/usr/bin/cpp]
-    #[clap(long, short, value_parser, conflicts_with = "nocpp")]
+    /// preprocessor to use [/usr/bin/cpp]; ignored with --nocpp
+    #[clap(long, short, value_parser)]
     pub cpp: Option<String>,
 
     /// do not use a preprocessor
