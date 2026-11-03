@@ -13,7 +13,7 @@ pub mod unit_test {
         const CONTENTS: &str = "\
 home_dir:/home
     key_one:val_one\t
-invalid-line's#!\\
+invalid-line's#!
 lockscreen-timeout:10     
 \tscreen-resolution:    1920x1080  
 valid: \"line\"
@@ -95,7 +95,7 @@ valid: \"line\"
     #[test]
     fn query() {
         let manager = get_resource_seeded_manager().unwrap();
-        let expected = "lockscreen-timeout :\t10\nscreen-resolution :\t1920x1080";
+        let expected = "lockscreen-timeout:\t10\nscreen-resolution:\t1920x1080\n";
         let query_result = manager.query("screen");
         assert_eq!(expected, query_result);
     }
@@ -223,17 +223,25 @@ valid: \"line\"
     #[test]
     fn check_valid_key() {
         let invalid_keys = [
-            "hello'", "world\\", "`bad`", "string%", "comma,", "#hash", "no space",
+            "hello'", "world\\", "`bad`", "string%", "comma,", "#hash", "no space", "a?b", "ends.",
         ];
-        let valid_keys = ["hello-world", "good_day", "sway.output", "normal"];
+        let valid_keys = [
+            "hello-world",
+            "good_day",
+            "sway.output",
+            "normal",
+            "*loose",
+            "?.b",
+            "a*b.c",
+        ];
         let manager = seed_resource_manager();
         for key in invalid_keys {
             println!("{key}");
-            assert_eq!(manager.check_valid_key(key), false);
+            assert_eq!(manager.check_valid_key(key), None);
         }
         for key in valid_keys {
             println!("{key}");
-            assert_eq!(manager.check_valid_key(key), true);
+            assert!(manager.check_valid_key(key).is_some());
         }
     }
 
