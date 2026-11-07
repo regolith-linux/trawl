@@ -1,3 +1,25 @@
+trawl (0.2.7) jammy; urgency=medium
+
+  [ rego-port-bot ]
+  * fix: don't delete the resource file when -I/-D arguments contain spaces
+  * fix(trawld): exit 0 for --help and --version
+  * fix(trawldb): clear resources before --load/--merge with --remove
+  * fix(trawldb): drop quit() from the D-Bus proxy
+  * fix(trawldb): make resources() read the Resources property
+  * fix(trawld): keep restarting trawld after occasional crashes
+  * fix(trawldb): exit 1 when a command fails
+  * fix(trawldb): edit values into the file with --edit, like xrdb -edit
+  * fix: don't delete the resource file when -I/-D arguments contain spaces
+  * fix(trawld): exit 0 for --help and --version
+  * fix(trawldb): clear resources before --load/--merge with --remove
+  * fix(trawldb): drop quit() from the D-Bus proxy
+  * fix(trawldb): make resources() read the Resources property
+  * fix(trawld): keep restarting trawld after occasional crashes
+  * fix(trawldb): exit 1 when a command fails
+  * fix(trawldb): edit values into the file with --edit, like xrdb -edit
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sat, 07 Nov 2026 09:38:56 -0800
+
 trawl (0.2.6) jammy; urgency=medium
 
   * fix: fix target to remove cycle present in ubuntu 26.04 gdm3.  Fixes gdm3 breaking when regolith is installed
