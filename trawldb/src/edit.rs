@@ -69,13 +69,26 @@ fn logical_lines(file: &[u8]) -> Vec<&[u8]> {
 /// The resource name of an entry line, or None for anything else (a
 /// comment, a preprocessor line, a blank line, a line without a colon).
 fn entry_name(line: &[u8]) -> Option<&[u8]> {
-    let line = line.trim_ascii_start();
+    let line = trim_ascii_start(line);
     if line.is_empty() || line[0] == b'!' || line[0] == b'#' {
         return None;
     }
     let colon = line.iter().position(|&b| b == b':')?;
-    let name = line[..colon].trim_ascii();
+    let name = trim_ascii(&line[..colon]);
     (!name.is_empty()).then_some(name)
+}
+
+// Local equivalents of `<[u8]>::trim_ascii_start` / `trim_ascii`, which are
+// only stable since Rust 1.80; Ubuntu jammy and noble ship rustc 1.75.
+fn trim_ascii_start(s: &[u8]) -> &[u8] {
+    let n = s.iter().take_while(|b| b.is_ascii_whitespace()).count();
+    &s[n..]
+}
+
+fn trim_ascii(s: &[u8]) -> &[u8] {
+    let s = trim_ascii_start(s);
+    let n = s.iter().rev().take_while(|b| b.is_ascii_whitespace()).count();
+    &s[..s.len() - n]
 }
 
 #[cfg(test)]
