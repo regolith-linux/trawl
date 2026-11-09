@@ -1,3 +1,4 @@
+pub mod cpp;
 pub mod manager;
 pub mod parser;
 
@@ -6,8 +7,9 @@ use parser::CliArgs;
 use std::{
     error::Error,
     fs::{self, File},
-    io::Write,
-    path::Path,
+    io::{Read, Write},
+    path::{self as stdpath, Path},
+    process::Stdio,
 };
 use zbus::{
     export::futures_util::StreamExt,
@@ -70,33 +72,102 @@ impl<'a> Client<'a> {
         }
     }
 
+    /// Makes a path absolute without resolving symlinks
     fn get_absolute_path(relative_path: &str) -> Result<String, Box<dyn Error>> {
-        let path_buf = fs::canonicalize(relative_path)?;
+        let path_buf = stdpath::absolute(relative_path)?;
         let abs = path_buf
             .to_str()
-            .expect("Failed to get absolute path: UTF-8 conversion failed")
+            .ok_or("Failed to get absolute path: UTF-8 conversion failed")?
             .to_owned();
         Ok(abs)
     }
 
-    /// Returns the preprocessor and its arguments, one element per argument
+    /// The preprocessor to run and its arguments, or None with --nocpp
     fn get_cpp_with_args(
+        nocpp: bool,
         cpp: &Option<String>,
         include: &Vec<String>,
         define: &Vec<String>,
     ) -> Option<(String, Vec<String>)> {
+        if nocpp {
+            return None;
+        }
         let include_args = include
             .iter()
             .filter_map(|s| Self::get_absolute_path(s).ok())
             .flat_map(|s| [String::from("-I"), s]);
         let define_args = define.iter().flat_map(|s| [String::from("-D"), s.clone()]);
         let args_list: Vec<String> = include_args.chain(define_args).collect();
-        let new_cpp = match cpp {
-            Some(preprocessor) => Some((preprocessor.clone(), args_list)),
-            None if args_list.len() > 0 => Some((String::from("/usr/bin/cpp"), args_list)),
-            _ => None,
+        let preprocessor = cpp.clone().unwrap_or_else(|| String::from("/usr/bin/cpp"));
+        Some((preprocessor, args_list))
+    }
+
+    /// Reads resource input like xrdb: `-` (or no file) is stdin, anything
+    /// else is a path used as given. The preprocessor runs here, in the
+    /// client, so its diagnostics go to our stderr and a blocked input only
+    /// blocks this process. Bytes that aren't valid UTF-8 become U+FFFD.
+    /// None when the preprocessor can't be run: like xrdb, that is reported
+    /// on stderr and nothing is taken in, but it isn't a failure.
+    fn read_input(
+        file: Option<&str>,
+        nocpp: bool,
+        cpp: &Option<String>,
+        include: &Vec<String>,
+        define: &Vec<String>,
+    ) -> Result<Option<String>, Box<dyn Error>> {
+        let cpp_with_args = Self::get_cpp_with_args(nocpp, cpp, include, define);
+        let path = file.filter(|f| *f != "-");
+        let name = path.unwrap_or("-");
+        // Read once, whole: a FIFO can't be opened twice.
+        let mut buf = Vec::new();
+        let read = match path {
+            Some(p) => {
+                let mut f = File::open(p).map_err(|e| format!("can't open file '{p}': {e}"))?;
+                if f.metadata().map(|m| m.is_dir()).unwrap_or(false) {
+                    return Err(format!("can't read file '{p}': it is a directory").into());
+                }
+                f.read_to_end(&mut buf)
+            }
+            None => std::io::stdin().lock().read_to_end(&mut buf),
         };
-        new_cpp
+        read.map_err(|e| format!("can't read file '{name}': {e}"))?;
+        let Some((preprocessor, args)) = cpp_with_args else {
+            return Ok(Some(String::from_utf8_lossy(&buf).into_owned()));
+        };
+        // Quoted includes resolve against the directory of the path as given
+        // (symlinks are not resolved first); stdin's resolve against the
+        // current directory, which cpp searches anyway. Diagnostics go
+        // straight to our stderr.
+        let dir = path
+            .map(Path::new)
+            .and_then(Path::parent)
+            .filter(|dir| !dir.as_os_str().is_empty());
+        match cpp::preprocess(&preprocessor, &args, dir, &buf, Stdio::inherit()) {
+            Ok((text, _)) => Ok(Some(text)),
+            Err(cpp::CppError::NotRun(e)) => {
+                eprintln!("trawldb: {e}");
+                Ok(None)
+            }
+            Err(cpp::CppError::Failed(e)) => Err(e.into()),
+        }
+    }
+
+    /// Reads the input off the async runtime: it may block for any time.
+    async fn read_input_blocking(
+        file: Option<&str>,
+        nocpp: bool,
+        cpp: &Option<String>,
+        include: &Vec<String>,
+        define: &Vec<String>,
+    ) -> Result<Option<String>, Box<dyn Error>> {
+        let (file, cpp) = (file.map(String::from), cpp.clone());
+        let (include, define) = (include.clone(), define.clone());
+        tokio::task::spawn_blocking(move || {
+            Client::read_input(file.as_deref(), nocpp, &cpp, &include, &define)
+                .map_err(|e| e.to_string())
+        })
+        .await?
+        .map_err(Into::into)
     }
 
     /// True if trawld doesn't know the method, i.e. it predates it
@@ -119,59 +190,96 @@ impl<'a> Client<'a> {
         Ok(args.join(" "))
     }
 
-    async fn load(
+    /// For a trawld that predates LoadText/MergeText (one still running
+    /// from before an upgrade): has trawld read the file itself, as before.
+    /// It can't read our stdin.
+    async fn from_file_old_trawld(
         &self,
-        path: &str,
+        merge: bool,
+        path: Option<&str>,
         nocpp: bool,
         cpp: &Option<String>,
         include: &Vec<String>,
         define: &Vec<String>,
     ) -> Result<(), Box<dyn Error>> {
+        let path = path
+            .filter(|p| *p != "-")
+            .ok_or("trawld is too old to read standard input; update trawld")?;
         let abs_path = Self::get_absolute_path(path)?;
-        let cpp_with_args = Self::get_cpp_with_args(cpp, include, define);
-        if let Some((preprocessor, args)) = &cpp_with_args {
-            println!("cpp: {preprocessor} args: {args:?}");
-            match self
-                .proxy
-                .load_cpp_argv(&abs_path, preprocessor, args)
-                .await
-            {
-                Err(e) if Self::is_unknown_method(&e) => {
-                    let args = Self::get_legacy_args(args)?;
-                    self.proxy.load_cpp(&abs_path, preprocessor, &args).await?;
-                }
-                res => res?,
+        let Some((preprocessor, args)) = Self::get_cpp_with_args(nocpp, cpp, include, define)
+        else {
+            return Ok(match merge {
+                false => self.proxy.load(&abs_path, true).await?,
+                true => self.proxy.merge(&abs_path, true).await?,
+            });
+        };
+        let res = match merge {
+            false => {
+                self.proxy
+                    .load_cpp_argv(&abs_path, &preprocessor, &args)
+                    .await
             }
-        } else {
-            self.proxy.load(&abs_path, nocpp).await?;
+            true => {
+                self.proxy
+                    .merge_cpp_argv(&abs_path, &preprocessor, &args)
+                    .await
+            }
+        };
+        match res {
+            Err(e) if Self::is_unknown_method(&e) => {
+                let args = Self::get_legacy_args(&args)?;
+                match merge {
+                    false => self.proxy.load_cpp(&abs_path, &preprocessor, &args).await?,
+                    true => {
+                        self.proxy
+                            .merge_cpp(&abs_path, &preprocessor, &args)
+                            .await?
+                    }
+                }
+            }
+            res => res?,
+        }
+        Ok(())
+    }
+
+    async fn load(
+        &self,
+        path: Option<&str>,
+        nocpp: bool,
+        cpp: &Option<String>,
+        include: &Vec<String>,
+        define: &Vec<String>,
+    ) -> Result<(), Box<dyn Error>> {
+        let Some(text) = Self::read_input_blocking(path, nocpp, cpp, include, define).await? else {
+            return Ok(());
+        };
+        match self.proxy.load_text(&text).await {
+            Err(e) if Self::is_unknown_method(&e) => {
+                self.from_file_old_trawld(false, path, nocpp, cpp, include, define)
+                    .await?
+            }
+            res => res?,
         }
         Ok(())
     }
 
     async fn merge(
         &self,
-        path: &str,
+        path: Option<&str>,
         nocpp: bool,
         cpp: &Option<String>,
         include: &Vec<String>,
         define: &Vec<String>,
     ) -> Result<(), Box<dyn Error>> {
-        let abs_path = Self::get_absolute_path(path)?;
-        let cpp_with_args = Self::get_cpp_with_args(cpp, include, define);
-        if let Some((preprocessor, args)) = &cpp_with_args {
-            match self
-                .proxy
-                .merge_cpp_argv(&abs_path, preprocessor, args)
-                .await
-            {
-                Err(e) if Self::is_unknown_method(&e) => {
-                    let args = Self::get_legacy_args(args)?;
-                    self.proxy.merge_cpp(&abs_path, preprocessor, &args).await?;
-                }
-                res => res?,
+        let Some(text) = Self::read_input_blocking(path, nocpp, cpp, include, define).await? else {
+            return Ok(());
+        };
+        match self.proxy.merge_text(&text).await {
+            Err(e) if Self::is_unknown_method(&e) => {
+                self.from_file_old_trawld(true, path, nocpp, cpp, include, define)
+                    .await?
             }
-        } else {
-            self.proxy.merge(&abs_path, nocpp).await?;
+            res => res?,
         }
         Ok(())
     }
@@ -198,16 +306,22 @@ impl<'a> Client<'a> {
         // Load file (default)
         if args.load.is_some() || args.filename.is_some() {
             let file = match &args.load {
-                Some(file) => file,
-                None => args.filename.as_ref().unwrap(),
+                Some(file) => file.as_deref(),
+                None => args.filename.as_deref(),
             };
             self.load(file, args.nocpp, &args.cpp, &args.include, &args.define)
                 .await?;
         }
         // Merge resources
         if let Some(file) = &args.merge {
-            self.merge(&file, args.nocpp, &args.cpp, &args.include, &args.define)
-                .await?;
+            self.merge(
+                file.as_deref(),
+                args.nocpp,
+                &args.cpp,
+                &args.include,
+                &args.define,
+            )
+            .await?;
         }
         // Either query all resources or get single resource
         if let Some(query) = &args.query {
@@ -251,20 +365,17 @@ mod tests {
     #[test]
     fn it_checks_get_cpp_args() {
         let cpp = None;
-        let args = Client::get_cpp_with_args(&cpp, &Vec::new(), &Vec::new());
+        let args = Client::get_cpp_with_args(true, &cpp, &Vec::new(), &Vec::new());
         assert_eq!(args, None);
 
-        let cpp = String::from("/usr/bin/cpp");
-        let args = Client::get_cpp_with_args(&Some(cpp.clone()), &Vec::new(), &Vec::new());
-        assert_eq!(args, Some((cpp.clone(), Vec::new())));
+        let args = Client::get_cpp_with_args(false, &cpp, &Vec::new(), &Vec::new());
+        assert_eq!(args, Some((String::from("/usr/bin/cpp"), Vec::new())));
 
+        let cpp = String::from("/usr/bin/cpp");
         let include = vec![String::from(".")];
         let define = vec![String::from("MODKEY=Mod4"), String::from("SWAY")];
-        println!("include: {:?}", include);
-        println!("define: {:?}", define);
-
-        let args = Client::get_cpp_with_args(&Some(cpp.clone()), &include, &define).unwrap();
-        assert_eq!(args.clone().0, cpp.clone());
+        let args = Client::get_cpp_with_args(false, &Some(cpp.clone()), &include, &define).unwrap();
+        assert_eq!(args.0, cpp);
         assert_eq!(
             args.1,
             vec![
@@ -286,7 +397,7 @@ mod tests {
         let dir = dir.to_str().unwrap().to_string();
         let include = vec![dir.clone()];
         let define = vec![String::from("NAME=a b")];
-        let args = Client::get_cpp_with_args(&None, &include, &define).unwrap();
+        let args = Client::get_cpp_with_args(false, &None, &include, &define).unwrap();
         assert_eq!(args.0, "/usr/bin/cpp");
         assert_eq!(
             args.1,

@@ -211,6 +211,29 @@ valid: \"line\"
     }
 
     #[test]
+    fn invalid_utf8_keeps_the_rest_of_the_file() -> Result<(), Box<dyn Error>> {
+        let dir = std::env::temp_dir().join(format!("trawl-{}", Uuid::new_v4()));
+        fs::create_dir_all(&dir)?;
+        fs::write(dir.join("inc"), b"inc.key: \xe0 la carte\n")?;
+        let file = dir.join("res");
+        fs::write(
+            &file,
+            b"! caf\xe9\n#include \"inc\"\nlatin.key: caf\xe9\nutf8.key: caf\xc3\xa9\n",
+        )?;
+        let file = file.to_str().unwrap();
+        for nocpp in [false, true] {
+            let mut manager = seed_resource_manager();
+            manager.merge_from_file(file, nocpp, "/usr/bin/cpp", &[]);
+            assert_eq!(manager.get_resource("latin.key"), "caf\u{fffd}", "{nocpp}");
+            assert_eq!(manager.get_resource("utf8.key"), "café", "{nocpp}");
+            let inc = if nocpp { "" } else { "\u{fffd} la carte" };
+            assert_eq!(manager.get_resource("inc.key"), inc, "{nocpp}");
+        }
+        fs::remove_dir_all(&dir)?;
+        Ok(())
+    }
+
+    #[test]
     fn split_legacy_cpp_args() {
         assert_eq!(split_legacy_args(""), Vec::<String>::new());
         assert_eq!(split_legacy_args("  "), Vec::<String>::new());
