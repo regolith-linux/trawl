@@ -2,6 +2,7 @@ mod common;
 pub mod log;
 pub mod parser;
 pub mod tests;
+mod xrm;
 
 use common::trim_str;
 use log::Logger;
@@ -118,7 +119,8 @@ impl ResourceManager {
     ) -> Result<Command, Box<dyn Error>> {
         let input = File::open(file_path)?;
         let mut command = self.preprocessor(cpp);
-        command.args(cpp_args).arg("-").stdin(input);
+        // Like xrdb: -P, no line markers, which would split continued lines
+        command.arg("-P").args(cpp_args).arg("-").stdin(input);
         if let Some(dir) = Path::new(file_path).parent() {
             if !dir.as_os_str().is_empty() {
                 command.current_dir(dir);
@@ -127,34 +129,26 @@ impl ResourceManager {
         Ok(command)
     }
 
-    /// Checks if a given key is a valid resource name
-    fn check_valid_key(&self, key: &str) -> bool {
-        let mut is_valid = true;
-        let allowed_chars = ['-', '.', '_'];
-        if key.len() == 0 {
-            is_valid = false;
+    /// Checks if a given key is a valid resource specification and
+    /// returns it normalized
+    fn check_valid_key(&self, key: &str) -> Option<String> {
+        let spec = xrm::normalize_spec(key);
+        if spec.is_none() {
+            self.logger.warn(&format!("{key} is not a valid key"));
         }
-        for ch in key.chars() {
-            if !ch.is_ascii_alphanumeric() && !allowed_chars.contains(&ch) {
-                self.logger.warn(&format!("{key} is not a valid key"));
-                is_valid = false;
-                break;
-            }
-        }
-        is_valid
+        spec
     }
 
-    /// Parse the 'config_str' string into key value pairs
+    /// Parse the 'config_str' string into key value pairs. Like xrdb, the
+    /// last entry for a specification wins.
     fn parse_config(&self, config_str: &str) -> HashMap<String, String> {
-        let parsed_resources: HashMap<String, String> = config_str
-            .lines()
-            // Split at ':'
-            .filter_map(|s| s.split_once(':'))
-            // trim and conver to String
-            .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
-            // Skip line if key contains invalid characters
-            .filter(|(k, _)| self.check_valid_key(&k))
-            .collect();
+        let mut parsed_resources = HashMap::new();
+        for (k, v) in xrm::parse(config_str) {
+            // Skip line if key is not a valid resource specification
+            if let Some(spec) = self.check_valid_key(&k) {
+                merge_resource(&mut parsed_resources, spec, v);
+            }
+        }
         parsed_resources
     }
 
@@ -171,7 +165,9 @@ impl ResourceManager {
         self.logger
             .info(&format!("parsed_resources: {:#?}", parsed_resources));
         for (k, v) in parsed_resources {
-            self.resources.entry(k).or_insert(v);
+            if xrm::find_spec(&self.resources, &k).is_none() {
+                self.resources.insert(k, v);
+            }
         }
         self.logger.info(&format!(
             "Updated resources after loading: \n {:#?}",
@@ -193,7 +189,7 @@ impl ResourceManager {
         self.logger
             .info(&format!("parsed_resources: {:#?}", parsed_resources));
         for (k, v) in parsed_resources {
-            self.resources.insert(k, v);
+            merge_resource(&mut self.resources, k, v);
         }
         self.logger.info(&format!(
             "Updated resources after merging: \n {:#?}",
@@ -310,10 +306,13 @@ impl ResourceManager {
             .resources
             .iter()
             .filter(|(k, _)| k.contains(query_trimmed))
-            .map(|(x, v)| format!("{} :\t{}", x, v))
             .collect();
+        // Like `xrdb -query`: sorted, one line per entry, values escaped
         matches.sort();
-        let query_result = matches.join("\n");
+        let query_result: String = matches
+            .iter()
+            .map(|(x, v)| format!("{}:\t{}\n", x, xrm::escape_value(v)))
+            .collect();
         self.logger.info(&format!(
             "Following resources match the query '{query_trimmed}'\
                                   : {query_result}"
@@ -321,17 +320,25 @@ impl ResourceManager {
         query_result
     }
 
-    /// Get the resource value
+    /// Get the resource value, or "" if it is not found
     pub fn get_resource(&self, key: &str) -> String {
+        self.lookup_resource(key).1
+    }
+
+    /// Look the resource up like Xlib, matching pattern entries. Returns
+    /// whether it was found, and its value: unlike `get_resource`, tells a
+    /// resource with an empty value from a missing one.
+    /// *Note*: Also a DBus interface
+    pub fn lookup_resource(&self, key: &str) -> (bool, String) {
         let key_trimmed = trim_str(key);
-        let value = self
+        let found = self
             .resources
             .get(key_trimmed)
-            .unwrap_or(&String::from(""))
-            .to_owned();
+            .or_else(|| xrm::lookup(&self.resources, key_trimmed));
+        let value = found.cloned().unwrap_or_default();
         self.logger
             .info(&format!("value of key {key_trimmed} is {value}"));
-        value
+        (found.is_some(), value)
     }
 
     /// DBus interface to set the value of a resource. Overwrites exiting value.
@@ -345,9 +352,9 @@ impl ResourceManager {
         key: String,
         val: String,
     ) {
-        let key_trimmed = common::trim_str(&key);
+        let key_normalized = normalize_key(&key);
         let val_trimmed = common::trim_str(&val);
-        let curr_val = self.resources.get(key_trimmed);
+        let curr_val = xrm::find_spec(&self.resources, &key_normalized).map(|k| &self.resources[k]);
         // Do not add key-value pair if key exists and current value is
         // same as the value to be inserted
         if let Some(x) = curr_val {
@@ -355,8 +362,11 @@ impl ResourceManager {
                 return;
             }
         }
-        self.resources
-            .insert(String::from(key_trimmed), String::from(val_trimmed));
+        merge_resource(
+            &mut self.resources,
+            key_normalized,
+            String::from(val_trimmed),
+        );
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -369,15 +379,15 @@ impl ResourceManager {
         key: String,
         val: String,
     ) {
-        let key_trimmed = trim_str(&key);
+        let key_normalized = normalize_key(&key);
         let val_trimmed = trim_str(&val);
-        let curr_val = self.resources.get(key_trimmed);
+        let curr_val = xrm::find_spec(&self.resources, &key_normalized);
         // Do not add key value pair if key already defined
         if let Some(_) = curr_val {
             return;
         }
         self.resources
-            .insert(String::from(key_trimmed), String::from(val_trimmed));
+            .insert(key_normalized, String::from(val_trimmed));
         self.emit_resources_changed(&ctxt).await;
     }
 
@@ -393,8 +403,10 @@ impl ResourceManager {
 
     /// Dbus interface to remove single entry from config manager
     pub async fn remove_one(&mut self, #[zbus(signal_context)] ctxt: SignalContext<'_>, key: &str) {
-        let key_trimmed = trim_str(key);
-        let removed_entry = self.handle_remove_one(key_trimmed);
+        let key_normalized = normalize_key(key);
+        let removed_entry = xrm::find_spec(&self.resources, &key_normalized)
+            .cloned()
+            .and_then(|k| self.handle_remove_one(&k));
         if let Some(pair) = removed_entry {
             self.emit_resources_changed(&ctxt).await;
             self.logger.warn(&format!("Resource cleared {:?}", pair));
@@ -406,4 +418,19 @@ impl ResourceManager {
     pub fn resources(&self) -> HashMap<String, String> {
         self.resources.clone()
     }
+}
+
+/// Resource name given over D-Bus, as stored: trimmed, and normalized if it
+/// is a valid resource specification
+fn normalize_key(key: &str) -> String {
+    let key_trimmed = trim_str(key);
+    xrm::normalize_spec(key_trimmed).unwrap_or_else(|| key_trimmed.to_string())
+}
+
+/// Inserts a resource, replacing the entry with the same specification
+fn merge_resource(resources: &mut HashMap<String, String>, key: String, value: String) {
+    if let Some(old_key) = xrm::find_spec(resources, &key).cloned() {
+        resources.remove(&old_key);
+    }
+    resources.insert(key, value);
 }
