@@ -119,7 +119,7 @@ pub async fn arg_merge() -> HashMap<String, String> {
 pub async fn arg_query() -> (String, String) {
     let _ = arg_filename_default().await;
     let q = "screen".to_string();
-    let expected = "lockscreen-timeout :\t10\nscreen-resolution :\t1920x1080";
+    let expected = "lockscreen-timeout:\t10\nscreen-resolution:\t1920x1080\n";
     (q, expected.to_string())
 }
 
