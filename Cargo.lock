@@ -1058,7 +1058,7 @@ dependencies = [
 
 [[package]]
 name = "trawlcat"
-version = "0.2.10"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "trawld"
-version = "0.2.8"
+version = "0.3.0"
 dependencies = [
  "clap",
  "colored",
@@ -1079,7 +1079,7 @@ dependencies = [
 
 [[package]]
 name = "trawldb"
-version = "0.2.9"
+version = "0.3.0"
 dependencies = [
  "clap",
  "tokio",

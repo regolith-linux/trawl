@@ -1,3 +1,15 @@
+trawl (0.3.0) jammy; urgency=medium
+
+  * fix(debian): raise the package version to 0.3.0 so Regolith's trawld,
+    trawldb and trawlcat outrank the Debian and Ubuntu builds
+    (0.2.9-2/0.2.9-4/0.2.10-1 in Ubuntu 26.04, trawlcat 0.2.11-1 in sid)
+  * fix(debian): drop the global trawld.service enablement left behind by the
+    distribution's trawld when this package replaces it
+  * chore: version the trawld, trawldb and trawlcat crates 0.3.0 as well, so
+    --version matches the package
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Mon, 09 Nov 2026 08:00:00 -0800
+
 trawl (0.2.7) jammy; urgency=medium
 
   [ rego-port-bot ]
