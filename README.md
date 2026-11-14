@@ -18,6 +18,14 @@ make
 
 **Note 3**: The `make setup` command will fail the first time you run it. This is because the code for dbus-interface is generated at this step. You can ignore this error and proceed to the following commands.
 
+# Running the tests
+
+```bash
+cargo test
+```
+
+The `trawldb` tests talk to a real `trawld` over D-Bus. Each one starts its own private session bus with `dbus-daemon` and serves `trawld` on it in-process, so you don't need a running `trawld` and your session's resources aren't touched. They need `dbus-daemon` (the `dbus-daemon` or `dbus` package) and `cpp` on the `PATH`; without `dbus-daemon` they print `dbus-daemon not found, skipping` and pass.
+
 # Install Instructions
 
 ```bash
