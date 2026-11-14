@@ -1,6 +1,6 @@
 [package]
 name = "trawldb"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>", "Ken Gilmer <kgilmer@gmail.com>"]
@@ -15,5 +15,5 @@ tokio = { version = "1", features = ["full"] }
 zbus = { version = "4.3.1", default-features = false, features = ["tokio"] }
 
 [dev-dependencies]
-trawld = { path = "../trawld", version = "0.3.0" }
+trawld = { path = "../trawld", version = "0.3.1" }
 uuid = { version = "0.8.1", features = ["serde", "v4"] }

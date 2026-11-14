@@ -1,3 +1,12 @@
+trawl (0.3.1) jammy; urgency=medium
+
+  [ rego-port-bot ]
+  * fix(debian): make trawld depend on cpp
+  * fix(tests): give each trawldb integration test its own bus and trawld
+  * chore: use the edition 2021 feature resolver in the workspace
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sat, 14 Nov 2026 10:53:56 -0800
+
 trawl (0.3.0) jammy; urgency=medium
 
   * fix(debian): raise the package version to 0.3.0 so Regolith's trawld,
